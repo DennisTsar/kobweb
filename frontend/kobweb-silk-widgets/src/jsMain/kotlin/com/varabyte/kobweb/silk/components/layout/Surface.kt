@@ -4,7 +4,6 @@ import androidx.compose.runtime.*
 import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.css.StyleVariable
 import com.varabyte.kobweb.compose.dom.ElementRefScope
-import com.varabyte.kobweb.compose.dom.refScope
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.foundation.layout.BoxScope
 import com.varabyte.kobweb.compose.ui.Alignment
@@ -14,7 +13,8 @@ import com.varabyte.kobweb.silk.components.style.ComponentStyle
 import com.varabyte.kobweb.silk.components.style.ComponentVariant
 import com.varabyte.kobweb.silk.components.style.addVariant
 import com.varabyte.kobweb.silk.components.style.toModifier
-import com.varabyte.kobweb.silk.init.setSilkVariables
+import com.varabyte.kobweb.silk.init.DarkTheme
+import com.varabyte.kobweb.silk.init.LightTheme
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
 import com.varabyte.kobweb.silk.theme.colors.LocalColorMode
 import org.jetbrains.compose.web.css.*
@@ -71,22 +71,21 @@ fun Surface(
     ref: ElementRefScope<HTMLElement>? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    var surfaceElement by remember { mutableStateOf<HTMLElement?>(null)}
+    val colorMode = remember { colorModeOverride?.let { mutableStateOf(it) } }
+
+    val style = when (colorMode?.value) {
+        ColorMode.LIGHT -> LightTheme
+        ColorMode.DARK -> DarkTheme
+        else -> null
+    }
     Box(
-        SurfaceStyle.toModifier(variant).then(modifier),
+        SurfaceStyle.toModifier(variant).then(style?.toModifier() ?: Modifier).then(modifier),
         contentAlignment = contentAlignment,
-        ref = refScope {
-            add(ref)
-            ref { surfaceElement = it }
-        },
+        ref = ref,
     ) {
-        if (colorModeOverride != null) {
-            surfaceElement?.let { surfaceElement ->
-                CompositionLocalProvider(LocalColorMode provides mutableStateOf(colorModeOverride)) {
-                    val currColorMode = ColorMode.current // Can recompose if child changes ColorMode.currentState
-                    LaunchedEffect(currColorMode) { surfaceElement.setSilkVariables(currColorMode) }
-                    content()
-                }
+        if (colorMode != null) {
+            CompositionLocalProvider(LocalColorMode provides colorMode) {
+                content()
             }
         } else {
             content()

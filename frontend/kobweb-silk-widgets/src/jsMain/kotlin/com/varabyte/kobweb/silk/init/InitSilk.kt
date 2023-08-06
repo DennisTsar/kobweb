@@ -1,7 +1,8 @@
 package com.varabyte.kobweb.silk.init
 
 import androidx.compose.runtime.*
-import com.varabyte.kobweb.compose.css.*
+import com.varabyte.kobweb.compose.ui.Modifier
+import com.varabyte.kobweb.compose.ui.modifiers.*
 import com.varabyte.kobweb.silk.SilkStyleSheet
 import com.varabyte.kobweb.silk.components.disclosure.TabBackgroundColorVar
 import com.varabyte.kobweb.silk.components.disclosure.TabBorderColorVar
@@ -71,6 +72,7 @@ import com.varabyte.kobweb.silk.components.overlay.TooltipTextContainerStyle
 import com.varabyte.kobweb.silk.components.overlay.TopLeftTooltipArrowVariant
 import com.varabyte.kobweb.silk.components.overlay.TopRightTooltipArrowVariant
 import com.varabyte.kobweb.silk.components.overlay.TopTooltipArrowVariant
+import com.varabyte.kobweb.silk.components.style.ComponentStyle
 import com.varabyte.kobweb.silk.components.style.common.DisabledStyle
 import com.varabyte.kobweb.silk.components.style.common.SmoothColorStyle
 import com.varabyte.kobweb.silk.components.text.DivTextStyle
@@ -83,7 +85,8 @@ import com.varabyte.kobweb.silk.theme.colors.BackgroundColorVar
 import com.varabyte.kobweb.silk.theme.colors.BorderColorVar
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
 import com.varabyte.kobweb.silk.theme.colors.ColorVar
-import com.varabyte.kobweb.silk.theme.toSilkPalette
+import com.varabyte.kobweb.silk.theme.colors.SilkPalette
+import com.varabyte.kobweb.silk.theme.replaceComponentStyleBase
 import org.w3c.dom.HTMLElement
 
 /**
@@ -96,6 +99,9 @@ import org.w3c.dom.HTMLElement
  *   Use this if you need to modify site global colors, shapes, typography, and/or styles.
  */
 class InitSilkContext(val config: MutableSilkConfig, val stylesheet: SilkStylesheet, val theme: MutableSilkTheme)
+
+internal val LightTheme by ComponentStyle(prefix = "silk") {}
+internal val DarkTheme by ComponentStyle(prefix = "silk") {}
 
 fun initSilk(additionalInit: (InitSilkContext) -> Unit = {}) {
     val mutableTheme = MutableSilkTheme()
@@ -158,58 +164,60 @@ fun initSilk(additionalInit: (InitSilkContext) -> Unit = {}) {
     mutableTheme.registerComponentStyle(DisplayUntilLgStyle)
     mutableTheme.registerComponentStyle(DisplayUntilXlStyle)
 
+    mutableTheme.registerComponentStyle(LightTheme)
+    mutableTheme.registerComponentStyle(DarkTheme)
+
     val config = MutableSilkConfig()
     additionalInit(InitSilkContext(config, SilkStylesheetInstance, mutableTheme))
     MutableSilkConfigInstance = config
+
+    mutableTheme.replaceComponentStyleBase(LightTheme) {
+        Modifier.setSilkVariables(mutableTheme.palettes.light)
+    }
+    mutableTheme.replaceComponentStyleBase(DarkTheme) {
+        Modifier.setSilkVariables(mutableTheme.palettes.dark)
+    }
 
     _SilkTheme = ImmutableSilkTheme(mutableTheme)
     SilkStylesheetInstance.registerStylesAndKeyframesInto(SilkStyleSheet)
     SilkTheme.registerStyles(SilkStyleSheet)
 }
 
-@Composable
-fun HTMLElement.setSilkVariables() {
-    setSilkVariables(ColorMode.current)
+private fun Modifier.setSilkVariables(palette: SilkPalette): Modifier {
+    return this
+        .setVariable(BackgroundColorVar, palette.background)
+        .setVariable(ColorVar, palette.color)
+        .setVariable(BorderColorVar, palette.border)
+        .setVariable(ButtonBackgroundDefaultColorVar, palette.button.default)
+        .setVariable(ButtonBackgroundFocusColorVar, palette.button.focus)
+        .setVariable(ButtonBackgroundHoverColorVar, palette.button.hover)
+        .setVariable(ButtonBackgroundPressedColorVar, palette.button.pressed)
+        .setVariable(ButtonColorVar, palette.color)
+        .setVariable(DividerColorVar, palette.border)
+        .setVariable(LinkDefaultColorVar, palette.link.default)
+        .setVariable(LinkVisitedColorVar, palette.link.visited)
+        .setVariable(OverlayBackgroundColorVar, palette.overlay)
+        .setVariable(SurfaceBackgroundColorVar, palette.background)
+        .setVariable(SurfaceColorVar, palette.color)
+        .setVariable(SwitchThumbColorVar, palette.switch.thumb)
+        .setVariable(TabColorVar, palette.tab.color)
+        .setVariable(TabBackgroundColorVar, palette.tab.background)
+        .setVariable(TabBorderColorVar, palette.tab.border)
+        .setVariable(TabDisabledBackgroundColorVar, palette.tab.disabled)
+        .setVariable(TabHoverBackgroundColorVar, palette.tab.hover)
+        .setVariable(TabPressedBackgroundColorVar, palette.tab.pressed)
+        .setVariable(TocBorderColorVar, palette.border)
+        .setVariable(TooltipBackgroundColorVar, palette.tooltip.background)
+        .setVariable(TooltipColorVar, palette.tooltip.color)
 }
 
-fun HTMLElement.setSilkVariables(colorMode: ColorMode) {
-    val palette = colorMode.toSilkPalette()
-
-    // region General color vars
-    setVariable(BackgroundColorVar, palette.background)
-    setVariable(ColorVar, palette.color)
-    setVariable(BorderColorVar, palette.border)
-    // endregion
-
-    // region Widget color vars
-    setVariable(ButtonBackgroundDefaultColorVar, palette.button.default)
-    setVariable(ButtonBackgroundFocusColorVar, palette.button.focus)
-    setVariable(ButtonBackgroundHoverColorVar, palette.button.hover)
-    setVariable(ButtonBackgroundPressedColorVar, palette.button.pressed)
-    setVariable(ButtonColorVar, palette.color)
-
-    setVariable(DividerColorVar, palette.border)
-
-    setVariable(LinkDefaultColorVar, palette.link.default)
-    setVariable(LinkVisitedColorVar, palette.link.visited)
-
-    setVariable(OverlayBackgroundColorVar, palette.overlay)
-
-    setVariable(SurfaceBackgroundColorVar, palette.background)
-    setVariable(SurfaceColorVar, palette.color)
-
-    setVariable(SwitchThumbColorVar, palette.switch.thumb)
-
-    setVariable(TabColorVar, palette.tab.color)
-    setVariable(TabBackgroundColorVar, palette.tab.background)
-    setVariable(TabBorderColorVar, palette.tab.border)
-    setVariable(TabDisabledBackgroundColorVar, palette.tab.disabled)
-    setVariable(TabHoverBackgroundColorVar, palette.tab.hover)
-    setVariable(TabPressedBackgroundColorVar, palette.tab.pressed)
-
-    setVariable(TocBorderColorVar, palette.border)
-
-    setVariable(TooltipBackgroundColorVar, palette.tooltip.background)
-    setVariable(TooltipColorVar, palette.tooltip.color)
-    // endregion
+@Composable
+fun HTMLElement.setSilkVariables() {
+    val style = when (ColorMode.current) {
+        ColorMode.LIGHT -> LightTheme.name
+        ColorMode.DARK -> DarkTheme.name
+    }
+    classList.remove(LightTheme.name)
+    classList.remove(DarkTheme.name)
+    classList.add(style)
 }
