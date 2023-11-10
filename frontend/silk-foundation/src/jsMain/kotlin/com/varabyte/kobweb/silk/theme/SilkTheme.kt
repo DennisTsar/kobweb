@@ -7,8 +7,9 @@ import com.varabyte.kobweb.silk.components.style.ComponentModifier
 import com.varabyte.kobweb.silk.components.style.ComponentModifiers
 import com.varabyte.kobweb.silk.components.style.ComponentStyle
 import com.varabyte.kobweb.silk.components.style.ComponentVariant
-import com.varabyte.kobweb.silk.components.style.ImmutableComponentStyle
+import com.varabyte.kobweb.silk.components.style.ImmutableStyleRule
 import com.varabyte.kobweb.silk.components.style.SimpleComponentVariant
+import com.varabyte.kobweb.silk.components.style.StyleRule
 import com.varabyte.kobweb.silk.components.style.breakpoint.BreakpointSizes
 import com.varabyte.kobweb.silk.components.style.breakpoint.BreakpointValues
 import com.varabyte.kobweb.silk.init.SilkConfig
@@ -26,13 +27,13 @@ import org.jetbrains.compose.web.css.*
  * Unlike [SilkConfig] values, theme values are expected to be accessible in user projects via the [SilkTheme] object.
  */
 class MutableSilkTheme {
-    private val _componentStyles = mutableMapOf<String, ComponentStyle>()
-    internal val componentStyles: Map<String, ComponentStyle> = _componentStyles
-    private val overriddenStyles = mutableSetOf<String>()
+    private val _styleRules = mutableMapOf<String, StyleRule>()
+    internal val styleRules: Map<String, StyleRule> = _styleRules
+    private val overriddenStyleRules = mutableSetOf<String>()
 
-    private val _componentVariants = mutableMapOf<String, ComponentVariant>()
-    internal val componentVariants: Map<String, ComponentVariant> = _componentVariants
-    private val overriddenVariants = mutableSetOf<String>()
+//    private val _componentVariants = mutableMapOf<String, ComponentVariant>()
+//    internal val componentVariants: Map<String, ComponentVariant> = _componentVariants
+//    private val overriddenVariants = mutableSetOf<String>()
 
     val palettes = MutablePalettes()
     internal val legacyPalettes = LegacyMutableSilkPalettes(palettes)
@@ -69,14 +70,14 @@ class MutableSilkTheme {
      * @see replaceComponentStyle
      */
     fun registerComponentStyle(style: ComponentStyle) {
-        check(componentStyles[style.name].let { it == null || it === style }) {
+        check(styleRules[style.name].let { it == null || it === style.styleRule }) {
             """
                 Attempting to register a second style with a name that's already used: "${style.name}"
 
                 If this was an intentional override, you should use `replaceComponentStyle` instead.
             """.trimIndent()
         }
-        _componentStyles[style.name] = style
+        _styleRules[style.name] = style.styleRule
     }
 
     /**
@@ -107,9 +108,9 @@ class MutableSilkTheme {
         extraModifiers: @Composable () -> Modifier,
         init: ComponentModifiers.() -> Unit
     ) {
-        check(componentStyles.contains(style.name)) { "Attempting to replace a style that was never registered: \"${style.name}\"" }
-        check(overriddenStyles.add(style.name)) { "Attempting to override style \"${style.name}\" twice" }
-        _componentStyles[style.name] = ComponentStyle(style.nameWithoutPrefix, extraModifiers, style.prefix, init)
+        check(styleRules.contains(style.name)) { "Attempting to replace a style that was never registered: \"${style.name}\"" }
+        check(overriddenStyleRules.add(style.name)) { "Attempting to override style \"${style.name}\" twice" }
+        _styleRules[style.name] = ComponentStyle(style.nameWithoutPrefix, extraModifiers, style.prefix, init).styleRule
     }
 
     /**
@@ -119,15 +120,15 @@ class MutableSilkTheme {
      */
     fun registerComponentVariants(vararg variants: ComponentVariant) {
         variants.filterIsInstance<SimpleComponentVariant>().forEach { variant ->
-            check(componentVariants[variant.style.name].let { it == null || it === variant }) {
+            check(styleRules[variant.style.selector].let { it == null || it === variant.style }) {
                 """
-                Attempting to register a second variant with a name that's already used: "${variant.style.name}"
+                Attempting to register a second variant with a name that's already used: "${variant.style.selector}"
 
                 This isn't allowed. Please choose a different name. If there's a usecase for this I'm unaware of,
                 consider filing an issue at https://github.com/varabyte/kobweb/issues
             """.trimIndent()
             }
-            _componentVariants[variant.style.name] = variant
+            _styleRules[variant.style.selector] = variant.style
         }
     }
 
@@ -164,9 +165,10 @@ class MutableSilkTheme {
         val variant = variant as? SimpleComponentVariant
             ?: error("You can only replace variants created by `addVariant` or `addVariantBase`.")
 
-        check(componentVariants.contains(variant.style.name)) { "Attempting to replace a variant that was never registered: \"${variant.style.name}\"" }
-        check(overriddenVariants.add(variant.style.name)) { "Attempting to override variant \"${variant.style.name}\" twice" }
-        _componentVariants[variant.style.name] = variant.baseStyle.addVariant(variant.name, extraModifiers, init)
+        check(styleRules.contains(variant.style.selector)) { "Attempting to replace a variant that was never registered: \"${variant.style.selector}\"" }
+        check(overriddenStyleRules.add(variant.style.selector)) { "Attempting to override variant \"${variant.style.selector}\" twice" }
+        _styleRules[variant.style.selector] =
+            (variant.baseStyle.addVariant(variant.name, extraModifiers, init) as SimpleComponentVariant).style // TODO
     }
 }
 
@@ -247,9 +249,9 @@ fun MutableSilkTheme.modifyComponentStyle(
     extraModifiers: @Composable () -> Modifier,
     init: ComponentModifiers.() -> Unit
 ) {
-    check(componentStyles.contains(style.name)) { "Attempting to modify a style that was never registered: \"${style.name}\"" }
-    val existingExtraModifiers = style.extraModifiers
-    val existingInit = style.init
+    check(styleRules.contains(style.name)) { "Attempting to modify a style that was never registered: \"${style.name}\"" }
+    val existingExtraModifiers = style.styleRule.extraModifiers
+    val existingInit = style.styleRule.init
 
     replaceComponentStyle(style, {
         existingExtraModifiers().then(extraModifiers())
@@ -311,7 +313,7 @@ fun MutableSilkTheme.modifyComponentVariant(
     val variant = variant as? SimpleComponentVariant
         ?: error("You can only replace variants created by `addVariant` or `addVariantBase`.")
 
-    check(componentVariants.contains(variant.style.name)) { "Attempting to modify a variant that was never registered: \"${variant.style.name}\"" }
+    check(styleRules.contains(variant.style.selector)) { "Attempting to modify a variant that was never registered: \"${variant.style.selector}\"" }
     val existingExtraModifiers = variant.style.extraModifiers
     val existingInit = variant.style.init
 
@@ -356,8 +358,8 @@ class ImmutableSilkTheme(private val mutableSilkTheme: MutableSilkTheme) {
 
     val breakpoints = mutableSilkTheme.breakpoints
 
-    private val _componentStyles = mutableMapOf<String, ImmutableComponentStyle>()
-    internal val componentStyles: Map<String, ImmutableComponentStyle> = _componentStyles
+    private val _componentStyles = mutableMapOf<String, ImmutableStyleRule>()
+    internal val componentStyles: Map<String, ImmutableStyleRule> = _componentStyles
 
     // Note: We separate this function out from the SilkTheme constructor so we can construct it first and then call
     // this later. This allows ComponentStyles to reference SilkTheme in their logic, e.g. TextStyle:
@@ -372,15 +374,16 @@ class ImmutableSilkTheme(private val mutableSilkTheme: MutableSilkTheme) {
         // We shouldn't have called this if we didn't set _SilkTheme already. This being true means ComponentStyle
         // initialization blocks can reference `SilkTheme`.
         check(_SilkTheme != null)
-        mutableSilkTheme.componentStyles.values.forEach { componentStyle ->
+        mutableSilkTheme.styleRules.values.forEach { componentStyle ->
             val classNames = componentStyle.addStylesInto(componentStyleSheet)
-            _componentStyles[componentStyle.name] = componentStyle.intoImmutableStyle(classNames)
+            _componentStyles[componentStyle.selector] = componentStyle.intoImmutable(classNames)
         }
+        // TODO - but does it matter if variants have higher specificity (do they?)
         // Variants should be defined after base styles to make sure they take priority if used
-        mutableSilkTheme.componentVariants.values.filterIsInstance<SimpleComponentVariant>().forEach { variant ->
-            val classNames = variant.addStylesInto(componentStyleSheet)
-            _componentStyles[variant.style.name] = variant.intoImmutableStyle(classNames)
-        }
+//        mutableSilkTheme.componentVariants.values.filterIsInstance<SimpleComponentVariant>().forEach { variant ->
+//            val classNames = variant.addStylesInto(componentStyleSheet)
+//            _componentStyles[variant.style.selector] = variant.intoImmutableStyle(classNames)
+//        }
     }
 }
 

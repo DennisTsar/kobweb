@@ -7,7 +7,6 @@ import com.varabyte.kobweb.silk.components.util.internal.CacheByPropertyNameDele
 import org.jetbrains.compose.web.css.*
 
 sealed class ComponentVariant {
-
     infix fun then(next: ComponentVariant): ComponentVariant {
         return CompositeComponentVariant(this, next)
     }
@@ -30,7 +29,7 @@ sealed class ComponentVariant {
  * A default [ComponentVariant] implementation that represents a single variant style.
  */
 class SimpleComponentVariant(
-    internal val style: ComponentStyle,
+    internal val style: StyleRule,
     internal val baseStyle: ComponentStyle,
 ) : ComponentVariant() {
     /**
@@ -39,19 +38,14 @@ class SimpleComponentVariant(
      * This name is not guaranteed to be unique across all variants. If you need that, check `style.name` instead.
      */
     val name: String
-        get() = style.name.removePrefix("${baseStyle.name}-")
+        get() = style.selector.removePrefix("${baseStyle.name}-") // TODO
 
     override fun addStylesInto(styleSheet: StyleSheet): ClassSelectors {
-        // If you are using a variant, require it be associated with a tag already associated with the base style
-        // e.g. if you have a link variant ("silk-link-undecorated") it should only be applied if the tag is also
-        // a link (so this would be registered as ".silk-link.silk-link-undecorated").
-        // To put it another way, if you use a link variant with a surface widget, it won't be applied.
-        return style.addStylesInto(styleSheet, ".${baseStyle.name}.${style.name}")
+        return style.addStylesInto(styleSheet)
     }
 
     @Composable
     override fun toModifier() = style.toModifier()
-    internal fun intoImmutableStyle(classSelectors: ClassSelectors) = style.intoImmutableStyle(classSelectors)
 }
 
 private class CompositeComponentVariant(private val head: ComponentVariant, private val tail: ComponentVariant) :
