@@ -97,20 +97,7 @@ class ComponentStyle(
         extraModifiers: @Composable () -> Modifier,
         init: ComponentModifiers.() -> Unit
     ): ComponentVariant {
-        return SimpleComponentVariant(
-            ComponentStyle("${this.name}-$name", extraModifiers, prefix = null, init),
-            baseStyle = this
-        )
-    }
-
-    /**
-     * @param cssRule A selector plus an optional pseudo keyword (e.g. "a", "a:link", and "a::selection")
-     */
-    private fun <T : StyleScope> GenericStyleSheetBuilder<T>.addStyles(cssRule: String, styles: ComparableStyleScope) {
-        cssRule style {
-            styles.properties.forEach { entry -> property(entry.key, entry.value) }
-            styles.variables.forEach { entry -> variable(entry.key, entry.value) }
-        }
+        return SimpleComponentVariant(name, extraModifiers, init, baseStyle = this)
     }
 
     /**
@@ -206,17 +193,20 @@ class ComponentStyle(
     }
 
     /**
-     * Adds styles into the given stylesheet for the specified selector.
+     * Processes and validates the Style, returning data related to the usage of the style.
      *
-     * @return The CSS class selectors that were added to the stylesheet, always including the base class, and
+     * @return A `StylesheetInfo` object containing the class selectors and the CSS style rules.
+     *  - The CSS class selectors associated with the style, always including the base class, and
      *  potentially additional classes if the style is color mode aware. This lets us avoid applying unnecessary
      *  classnames, making it easier to debug CSS issues in the browser.
+     *  - A list of CSS style rules describing how it should be applied to the stylesheet.
      */
-    internal fun addStylesInto(styleSheet: StyleSheet, selectorName: String): ClassSelectors {
+    private fun getStyleSheetInfo(selectorName: String): StylesheetInfo {
         // Always add the base selector name, even if the ComponentStyle is empty. Callers may use empty
         // component styles as classnames, which can still be useful for targeting one element from another, or
         // searching for all elements tagged with a certain class.
         val classNames = mutableListOf(selectorName)
+        val styleGroupThings = mutableListOf<CssStyleRule>()
 
         val lightModifiers = ComponentModifiers(ColorMode.LIGHT).mergeCssModifiers(init)
             .assertNoAttributeModifiers(selectorName)
@@ -227,7 +217,7 @@ class ComponentStyle(
             withFinalSelectorName(selectorName, group) { name, styles ->
                 if (styles.isNotEmpty()) {
                     classNames.add(name)
-                    styleSheet.addStyles(name, styles)
+                    styleGroupThings.add(CssStyleRule(name, styles))
                 }
             }
         }
@@ -241,48 +231,38 @@ class ComponentStyle(
                     classNames.add(name)
 
                     val cssRule = "$name${cssRuleKey.suffix.orEmpty()}"
-                    if (cssRuleKey.mediaQuery != null) {
-                        styleSheet.apply {
-                            media(cssRuleKey.mediaQuery) {
-                                addStyles(cssRule, styles)
-                            }
-                        }
+                    val styleGroupThing = if (cssRuleKey.mediaQuery != null) {
+                        CssStyleRule(cssRule, styles, cssRuleKey.mediaQuery)
                     } else {
-                        styleSheet.addStyles(cssRule, styles)
+                        CssStyleRule(cssRule, styles)
                     }
+                    styleGroupThings.add(styleGroupThing)
                 }
             }
         }
-        return ClassSelectors(classNames)
+        return StylesheetInfo(ClassSelectors(classNames), styleGroupThings)
     }
 
-    /**
-     * Add this [ComponentStyle]'s styles to the target [StyleSheet].
-     *
-     * @return The CSS class selectors that were added to the stylesheet.
-     */
-    internal fun addStylesInto(styleSheet: StyleSheet): ClassSelectors {
-        // Register styles associated with this style's classname
-        return addStylesInto(styleSheet, ".$name")
+    // TODO: remove cssSelector parameter when StyleRule is introduced
+    //  This cannot be currently done as ComponentStyles also represent ComponentVariants and raw selectors
+    //  (e.g. "#some-id"), which have different needs when turned into Immutable
+    internal fun intoImmutableStyle(cssSelector: String = ".$name"): ImmutableComponentStyle {
+        return ImmutableComponentStyle(getStyleSheetInfo(cssSelector), extraModifiers)
     }
-
-    internal fun intoImmutableStyle(classSelectors: ClassSelectors) =
-        ImmutableComponentStyle(classSelectors, extraModifiers)
 }
 
 /**
  * A [ComponentStyle] pared down to read-only data only, which should happen shortly after Silk initializes.
  *
- * @param classSelectors The CSS class selectors associated with this style, including the base class and any
- *  color mode specific classes, used to determine the exact classnames to apply when this style is used.
+ * @param stylesheetInfo The information needed to apply this style to a stylesheet and to generate a modifier.
  * @param extraModifiers Additional modifiers that can be tacked onto this component style, convenient for including
  *   non-style attributes whenever this style is applied.
  */
 internal class ImmutableComponentStyle(
-    classSelectors: ClassSelectors,
+    private val stylesheetInfo: StylesheetInfo,
     private val extraModifiers: @Composable () -> Modifier
 ) {
-    private val classNames = classSelectors.classNames.toSet()
+    private val classNames = stylesheetInfo.classSelectors.classNames.toSet()
 
     @Composable
     fun toModifier(): Modifier {
@@ -290,7 +270,47 @@ internal class ImmutableComponentStyle(
         return (if (currentClassNames.isNotEmpty()) Modifier.classNames(*currentClassNames.toTypedArray()) else Modifier)
             .then(extraModifiers())
     }
+
+    internal fun addStylesInto(styleSheet: StyleSheet) {
+        stylesheetInfo.cssStyleRules.forEach { group ->
+            if (group.mediaQuery == null) {
+                styleSheet.addStyles(group.cssRule, group.styles)
+            } else {
+                styleSheet.media(group.mediaQuery) {
+                    addStyles(group.cssRule, group.styles)
+                }
+            }
+        }
+    }
+
+    /**
+     * @param cssRule A selector plus an optional pseudo keyword (e.g. "a", "a:link", and "a::selection")
+     */
+    private fun <T : StyleScope> GenericStyleSheetBuilder<T>.addStyles(cssRule: String, styles: ComparableStyleScope) {
+        cssRule style {
+            styles.properties.forEach { entry -> property(entry.key, entry.value) }
+            styles.variables.forEach { entry -> variable(entry.key, entry.value) }
+        }
+    }
 }
+
+/**
+ * Holds information about CSS class selectors and style rules associated with a `ComponentStyle`.
+ *
+ * @param classSelectors A list of class selectors associated with the component style.
+ * @param cssStyleRules A list of CSS style rules that will need to be added to the stylesheet.
+ */
+// TODO: name this better
+internal class StylesheetInfo(val classSelectors: ClassSelectors, val cssStyleRules: List<CssStyleRule>)
+
+/**
+ * Represents an individual CSS style rule, containing all the information needed to add the styles to a StyleSheet.
+ *
+ * @param cssRule The CSS rule string, including selector and optional pseudo-elements.
+ * @param styles A scope containing the CSS properties and variables associated with the rule.
+ * @param mediaQuery An optional media query string defining the conditions under which this rule applies.
+ */
+internal class CssStyleRule(val cssRule: String, val styles: ComparableStyleScope, val mediaQuery: String? = null)
 
 /** Represents the class selectors associated with a [ComponentStyle]. */
 internal value class ClassSelectors(private val value: List<String>) {

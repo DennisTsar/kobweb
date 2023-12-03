@@ -4,23 +4,11 @@ import androidx.compose.runtime.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.util.titleCamelCaseToKebabCase
 import com.varabyte.kobweb.silk.components.util.internal.CacheByPropertyNameDelegate
-import org.jetbrains.compose.web.css.*
 
 sealed class ComponentVariant {
-
     infix fun then(next: ComponentVariant): ComponentVariant {
         return CompositeComponentVariant(this, next)
     }
-
-    /**
-     * Add this [ComponentVariant]'s styles to the target [StyleSheet].
-     *
-     * @return The CSS class selectors associated specifically with this variant. For example, if the selector
-     *  for this variant is `.some-style.some-variant`, then this method will only contain `some-variant`.
-     *
-     *  @see ComponentStyle.addStylesInto
-     */
-    internal abstract fun addStylesInto(styleSheet: StyleSheet): ClassSelectors
 
     @Composable
     internal abstract fun toModifier(): Modifier
@@ -28,35 +16,26 @@ sealed class ComponentVariant {
 
 /**
  * A default [ComponentVariant] implementation that represents a single variant style.
+ *
+ * @property name The raw variant name, unqualified by its parent base style.
+ *
+ *  This name is not guaranteed to be unique across all variants. If you need that, check `style.name` instead.
  */
-internal class SimpleComponentVariant(val style: ComponentStyle, val baseStyle: ComponentStyle) : ComponentVariant() {
-    /**
-     * The raw variant name, unqualified by its parent base style.
-     *
-     * This name is not guaranteed to be unique across all variants. If you need that, check `style.name` instead.
-     */
-    val name: String
-        get() = style.name.removePrefix("${baseStyle.name}-")
-
-    override fun addStylesInto(styleSheet: StyleSheet): ClassSelectors {
-        // If you are using a variant, require it be associated with a tag already associated with the base style
-        // e.g. if you have a link variant ("silk-link-undecorated") it should only be applied if the tag is also
-        // a link (so this would be registered as ".silk-link.silk-link-undecorated").
-        // To put it another way, if you use a link variant with a surface widget, it won't be applied.
-        return style.addStylesInto(styleSheet, ".${baseStyle.name}.${style.name}")
-    }
+internal class SimpleComponentVariant(
+    val name: String,
+    extraModifiers: @Composable () -> Modifier,
+    init: ComponentModifiers.() -> Unit,
+    val baseStyle: ComponentStyle,
+) : ComponentVariant() {
+    val style = ComponentStyle("${baseStyle.name}-$name", extraModifiers, prefix = null, init)
 
     @Composable
     override fun toModifier() = style.toModifier()
-    fun intoImmutableStyle(classSelectors: ClassSelectors) = style.intoImmutableStyle(classSelectors)
+    fun intoImmutableStyle() = style.intoImmutableStyle(".${baseStyle.name}.${style.name}")
 }
 
 private class CompositeComponentVariant(private val head: ComponentVariant, private val tail: ComponentVariant) :
     ComponentVariant() {
-    override fun addStylesInto(styleSheet: StyleSheet): ClassSelectors {
-        return head.addStylesInto(styleSheet) + tail.addStylesInto(styleSheet)
-    }
-
     @Composable
     override fun toModifier() = head.toModifier().then(tail.toModifier())
 }
