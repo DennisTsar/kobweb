@@ -3,6 +3,7 @@ package com.varabyte.kobweb.silk.init
 import androidx.compose.runtime.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.silk.components.animation.KeyframesBuilder
+import com.varabyte.kobweb.silk.components.style.SimpleStyleRule
 import com.varabyte.kobweb.silk.components.style.StyleModifiers
 import com.varabyte.kobweb.silk.components.style.StyleRule
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
@@ -172,7 +173,7 @@ internal object SilkStylesheetInstance : SilkStylesheet {
         extraModifiers: @Composable () -> Modifier,
         init: StyleModifiers.() -> Unit
     ) {
-        styles.add(StyleRule(init, cssSelector, extraModifiers))
+        styles.add(SimpleStyleRule(init, extraModifiers))
     }
 
     override fun registerKeyframes(name: String, build: KeyframesBuilder.() -> Unit) {

@@ -358,8 +358,8 @@ class ImmutableSilkTheme(private val mutableSilkTheme: MutableSilkTheme) {
 
     val breakpoints = mutableSilkTheme.breakpoints
 
-    private val _componentStyles = mutableMapOf<String, ImmutableStyleRule>()
-    internal val componentStyles: Map<String, ImmutableStyleRule> = _componentStyles
+    private val _componentStyles = mutableMapOf<StyleRule, ImmutableStyleRule>()
+    internal val componentStyles: Map<StyleRule, ImmutableStyleRule> = _componentStyles
 
     // Note: We separate this function out from the SilkTheme constructor so we can construct it first and then call
     // this later. This allows ComponentStyles to reference SilkTheme in their logic, e.g. TextStyle:
@@ -376,7 +376,7 @@ class ImmutableSilkTheme(private val mutableSilkTheme: MutableSilkTheme) {
         check(_SilkTheme != null)
         mutableSilkTheme.styleRules.values.forEach { componentStyle ->
             val classNames = componentStyle.addStylesInto(componentStyleSheet)
-            _componentStyles[componentStyle.selector] = componentStyle.intoImmutable(classNames)
+            _componentStyles[componentStyle] = componentStyle.intoImmutable(classNames)
         }
         // TODO - but does it matter if variants have higher specificity (do they?)
         // Variants should be defined after base styles to make sure they take priority if used

@@ -56,7 +56,7 @@ class ComponentStyle(
     internal val nameWithoutPrefix = name
     val name = prefix?.let { "$it-$name" } ?: name
 
-    val styleRule = StyleRule(init, name, prefix, extraModifiers)
+    val styleRule = SimpleStyleRule(init, name, prefix, extraModifiers)
 
     constructor(
         name: String,
@@ -97,7 +97,7 @@ class ComponentStyle(
         // a link (so this would be registered as ".silk-link.silk-link-undecorated").
         // To put it another way, if you use a link variant with a surface widget, it won't be applied.
         return SimpleComponentVariant(
-            StyleRule(init, "${styleRule.selector}.${this.name}-$name", extraModifiers),
+            SimpleStyleRule(init, "${styleRule.selector}.${this.name}-$name", extraModifiers),
             baseStyle = this
         )
     }

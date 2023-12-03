@@ -16,19 +16,21 @@ import org.jetbrains.compose.web.css.*
 import org.w3c.dom.Element
 
 // TODO: constructor visibility
-class StyleRule(
+abstract class StyleRule(
     internal val init: ComponentModifiers.() -> Unit,
-    val selector: String,
+//    val selector: String,
 //    val nameOverride: String? = null,
 //    val prefix: String? = null,
     internal val extraModifiers: @Composable () -> Modifier,
 ) {
-    constructor(
-        init: ComponentModifiers.() -> Unit,
-        name: String,
-        prefix: String? = null,
-        extraModifiers: @Composable () -> Modifier,
-    ) : this(init, "." + (prefix?.let { "$it-$name" } ?: name), extraModifiers)
+    internal val selector
+        get() = ""//SilkStylesheetInstance.styleRules.getValue(this) // TODO TODO TODO
+//    constructor(
+//        init: ComponentModifiers.() -> Unit,
+//        name: String,
+//        prefix: String? = null,
+//        extraModifiers: @Composable () -> Modifier,
+//    ) : this(init, "." + (prefix?.let { "$it-$name" } ?: name), extraModifiers)
 
     /**
      * @param cssRule A selector plus an optional pseudo keyword (e.g. "a", "a:link", and "a::selection")
@@ -218,6 +220,22 @@ private sealed interface StyleGroup {
     }
 }
 
+// TODO
+class SimpleStyleRule(
+    init: ComponentModifiers.() -> Unit,
+//    selector: String,
+//    val nameOverride: String? = null,
+//    val prefix: String? = null,
+    extraModifiers: @Composable () -> Modifier,
+) : StyleRule(init, extraModifiers) {
+    constructor(
+        init: ComponentModifiers.() -> Unit,
+        name: String,
+        prefix: String? = null,
+        extraModifiers: @Composable () -> Modifier,
+    ) : this(init, extraModifiers)
+}
+
 internal class ImmutableStyleRule(
     classSelectors: ClassSelectors,
     private val extraModifiers: @Composable () -> Modifier
@@ -234,5 +252,49 @@ internal class ImmutableStyleRule(
 
 @Composable
 fun StyleRule.toModifier(): Modifier {
-    return SilkTheme.componentStyles.getValue(selector).toModifier()
+    return SilkTheme.componentStyles.getValue(this).toModifier()
 }
+
+abstract class MyStyleRule(
+    init: ComponentModifiers.() -> Unit,
+    selectorOverride: String? = null,
+)
+
+class ButtonSize(
+    val padding: CSSLengthOrPercentageValue
+) : MyStyleRule({ base { Modifier.padding(padding) } })
+
+val SM = ButtonSize(4.px) // ksp generates button-size-sm
+
+class ButtonSize2(
+    val padding: CSSLengthOrPercentageValue,
+    val name: String,
+) : MyStyleRule({ base { Modifier.padding(padding) } }, "button-size-$name")
+
+val SM2 = ButtonSize2(4.px, "sm") // set by constructor "button-size-sm"
+
+class ButtonSize3(
+    val padding: CSSLengthOrPercentageValue,
+    val name: String? = null,
+) : MyStyleRule({ base { Modifier.padding(padding) } }, name)
+
+val SM3 = ButtonSize3(4.px, "button-size-sm") // set by constructor "button-size-sm"
+val MD3 = ButtonSize3(8.px) // ksp generates button-size-md
+
+
+//class ButtonSize4(
+//    val padding: CSSLengthOrPercentageValue,
+//    val name: String? = null,
+//) : MyStyleRule(
+//    { base { Modifier.padding(padding) } },
+//    { className, propertyName -> name ?: "$className-$propertyName" })
+
+// Wrong
+//class ButtonSize3(
+//    val padding: CSSLengthOrPercentageValue,
+//) : MyStyleRule({
+//    base {
+//        Modifier.padding(padding)
+//    }
+//}, "ButtonSize")
+//val SM3 = ButtonSize3(4.px)
