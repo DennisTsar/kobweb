@@ -3,7 +3,7 @@ package com.varabyte.kobweb.silk.init
 import androidx.compose.runtime.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.silk.components.animation.KeyframesBuilder
-import com.varabyte.kobweb.silk.components.style.ComponentStyle
+import com.varabyte.kobweb.silk.components.style.SimpleStyleRule
 import com.varabyte.kobweb.silk.components.style.StyleModifiers
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
 import com.varabyte.kobweb.silk.theme.colors.suffixedWith
@@ -164,7 +164,7 @@ fun SilkStylesheet.registerBaseStyle(
 }
 
 internal object SilkStylesheetInstance : SilkStylesheet {
-    private val styles = mutableListOf<ComponentStyle>()
+    private val styles = mutableListOf<SimpleStyleRule>()
     private val keyframes = mutableMapOf<String, KeyframesBuilder.() -> Unit>()
 
     override fun registerStyle(
@@ -172,7 +172,7 @@ internal object SilkStylesheetInstance : SilkStylesheet {
         extraModifiers: @Composable () -> Modifier,
         init: StyleModifiers.() -> Unit
     ) {
-        styles.add(ComponentStyle(cssSelector, extraModifiers, prefix = null, init))
+        styles.add(SimpleStyleRule(init, cssSelector, extraModifiers))
     }
 
     override fun registerKeyframes(name: String, build: KeyframesBuilder.() -> Unit) {
@@ -183,7 +183,7 @@ internal object SilkStylesheetInstance : SilkStylesheet {
     // This method is not part of the public API and should only be called by Silk itself at initialization time
     fun registerStylesAndKeyframesInto(siteStyleSheet: StyleSheet) {
         styles.forEach { componentStyle ->
-            componentStyle.intoImmutableStyle(componentStyle.name).addStylesInto(siteStyleSheet)
+            componentStyle.intoImmutableStyle().addStylesInto(siteStyleSheet)
         }
 
         keyframes.map { (name, build) ->

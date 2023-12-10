@@ -24,14 +24,14 @@ sealed class ComponentVariant {
 internal class SimpleComponentVariant(
     val name: String,
     extraModifiers: @Composable () -> Modifier,
-    init: ComponentModifiers.() -> Unit,
+    val init: ComponentModifiers.() -> Unit,
     val baseStyle: ComponentStyle,
 ) : ComponentVariant() {
-    val style = ComponentStyle("${baseStyle.name}-$name", extraModifiers, prefix = null, init)
+    val selector = ".${baseStyle.name}.${baseStyle.name}-$name"
+    val styleRule = SimpleStyleRule(init, selector, extraModifiers)
 
     @Composable
-    override fun toModifier() = style.toModifier()
-    fun intoImmutableStyle() = style.intoImmutableStyle(".${baseStyle.name}.${style.name}")
+    override fun toModifier() = styleRule.toModifier()
 }
 
 private class CompositeComponentVariant(private val head: ComponentVariant, private val tail: ComponentVariant) :
