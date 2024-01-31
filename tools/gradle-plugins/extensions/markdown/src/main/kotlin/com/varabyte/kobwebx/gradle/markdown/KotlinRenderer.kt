@@ -3,9 +3,10 @@ package com.varabyte.kobwebx.gradle.markdown
 import com.varabyte.kobweb.common.collect.TypedMap
 import com.varabyte.kobweb.common.navigation.Route
 import com.varabyte.kobweb.common.text.isSurrounded
+import com.varabyte.kobweb.gradle.core.extensions.kobwebBlock
+import com.varabyte.kobweb.gradle.core.extensions.prefixQualifiedPackage
 import com.varabyte.kobweb.gradle.core.util.Reporter
 import com.varabyte.kobweb.gradle.core.util.hasJsDependencyNamed
-import com.varabyte.kobweb.gradle.core.util.prefixQualifiedPackage
 import com.varabyte.kobwebx.gradle.markdown.ext.kobwebcall.KobwebCall
 import com.varabyte.kobwebx.gradle.markdown.ext.kobwebcall.KobwebCallBlock
 import com.varabyte.kobwebx.gradle.markdown.ext.kobwebcall.KobwebCallVisitor
@@ -97,7 +98,7 @@ class KotlinRenderer(
                     appendLine("import com.varabyte.kobwebx.markdown.*")
                 }
                 (imports + frontMatterData?.imports.orEmpty()).forEach { importPath ->
-                    appendLine("import ${project.prefixQualifiedPackage(importPath)}")
+                    appendLine("import ${project.kobwebBlock.prefixQualifiedPackage(importPath)}")
                 }
 
                 appendLine()
@@ -406,7 +407,7 @@ class KotlinRenderer(
         override fun visit(customNode: CustomNode) {
             when (customNode) {
                 is KobwebCall -> {
-                    output.appendLine("$indent${customNode.toFqn(project)}")
+                    output.appendLine("$indent${customNode.toFqn(project.kobwebBlock)}")
                 }
 
                 is TableHead -> visit(customNode)

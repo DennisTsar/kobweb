@@ -8,15 +8,17 @@ import com.varabyte.kobweb.gradle.core.util.KobwebVersionUtil
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.getByType
 import java.io.File
+import javax.inject.Inject
 
 /**
  * A gradle block used for initializing values that configure a Kobweb project.
  *
  * This class also exposes a handful of methods useful for querying the project.
  */
-abstract class KobwebBlock : ExtensionAware {
+abstract class KobwebBlock @Inject constructor(internal val projectGroup: Provider<String>) : ExtensionAware {
     /**
      * An interface used for tagging Gradle extensions which generate files for Kobweb.
      *
@@ -105,3 +107,15 @@ abstract class KobwebBlock : ExtensionAware {
 }
 
 val Project.kobwebBlock get() = project.extensions.getByType<KobwebBlock>()
+
+/**
+ * Get the fully qualified packages name, e.g. ".pages" -> "org.example.pages"
+ *
+ * This function should be called lazily.
+ */
+fun KobwebBlock.prefixQualifiedPackage(relPathMaybe: String): String {
+    return when {
+        relPathMaybe.startsWith('.') -> "${projectGroup.get()}$relPathMaybe"
+        else -> relPathMaybe
+    }
+}

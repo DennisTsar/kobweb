@@ -1,12 +1,12 @@
 package com.varabyte.kobwebx.gradle.markdown.tasks
 
 import com.varabyte.kobweb.gradle.core.extensions.KobwebBlock
+import com.varabyte.kobweb.gradle.core.extensions.prefixQualifiedPackage
 import com.varabyte.kobweb.gradle.core.kmp.jsTarget
 import com.varabyte.kobweb.gradle.core.tasks.KobwebTask
 import com.varabyte.kobweb.gradle.core.util.RootAndFile
 import com.varabyte.kobweb.gradle.core.util.getResourceFilesWithRoots
 import com.varabyte.kobweb.gradle.core.util.getResourceRoots
-import com.varabyte.kobweb.gradle.core.util.prefixQualifiedPackage
 import com.varabyte.kobwebx.gradle.markdown.MarkdownBlock
 import com.varabyte.kobwebx.gradle.markdown.MarkdownEntry
 import com.varabyte.kobwebx.gradle.markdown.MarkdownFeatures
@@ -68,12 +68,12 @@ abstract class ProcessMarkdownTask @Inject constructor(
 
     @OutputDirectory
     fun getGenSrcDir(): File = kobwebBlock.getGenJsSrcRoot<MarkdownBlock>(project).resolve(
-        project.prefixQualifiedPackage(kobwebBlock.baseGenDir.get()).replace(".", "/")
+        kobwebBlock.prefixQualifiedPackage(kobwebBlock.baseGenDir.get()).replace(".", "/")
     )
 
     @OutputDirectory
     fun getGenResDir(): File = kobwebBlock.getGenJsResRoot<MarkdownBlock>(project).resolve(
-        project.prefixQualifiedPackage(kobwebBlock.publicPath.get()).replace(".", "/")
+        kobwebBlock.prefixQualifiedPackage(kobwebBlock.publicPath.get()).replace(".", "/")
     )
 
     @TaskAction

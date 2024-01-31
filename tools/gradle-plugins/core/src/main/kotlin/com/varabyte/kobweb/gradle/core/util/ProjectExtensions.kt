@@ -46,16 +46,6 @@ fun Project.getResourceFilesWithRoots(platform: TargetPlatform<*>): Sequence<Roo
 }
 
 /**
- * Using a [Project], get the fully qualified packages name, e.g. ".pages" -> "org.example.pages"
- */
-fun Project.prefixQualifiedPackage(relPathMaybe: String): String {
-    return when {
-        relPathMaybe.startsWith('.') -> "${project.group}$relPathMaybe"
-        else -> relPathMaybe
-    }
-}
-
-/**
  * Returns true if one of this module's direct dependencies (no transitive dependencies included) is named [name].
  *
  * This method should be called in an [Project.afterEvaluate] block, or else it will always return false.

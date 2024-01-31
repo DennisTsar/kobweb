@@ -6,6 +6,7 @@ import com.varabyte.kobweb.ProcessorMode
 import com.varabyte.kobweb.frontendFile
 import com.varabyte.kobweb.gradle.core.extensions.KobwebBlock
 import com.varabyte.kobweb.gradle.core.extensions.kobwebBlock
+import com.varabyte.kobweb.gradle.core.extensions.prefixQualifiedPackage
 import com.varabyte.kobweb.gradle.core.kmp.JsTarget
 import com.varabyte.kobweb.gradle.core.kmp.JvmTarget
 import com.varabyte.kobweb.gradle.core.kmp.TargetPlatform
@@ -13,7 +14,6 @@ import com.varabyte.kobweb.gradle.core.kmp.jsTarget
 import com.varabyte.kobweb.ksp.KSP_API_PACKAGE_KEY
 import com.varabyte.kobweb.ksp.KSP_PAGES_PACKAGE_KEY
 import com.varabyte.kobweb.ksp.KSP_PROCESSOR_MODE_KEY
-import com.varabyte.kobweb.project.common.PackageUtils
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.provider.Provider
@@ -25,19 +25,13 @@ fun Project.applyKspPlugin() = pluginManager.apply(KspGradleSubplugin::class.jav
 
 fun Project.setKspMode(mode: ProcessorMode) = addKspArguments(KSP_PROCESSOR_MODE_KEY to mode.name)
 
-// TODO: we currently set KSP_*_PACKAGE_KEY using task.project.group since the project.group of where the plugin is
-//  applied may be different. However, task.project is not recommended to be used, what are our alternatives?
-
 /** Add & configure the Kobweb KSP processor for JS sources. */
 fun Project.setupKspJs(target: JsTarget, mode: ProcessorMode) {
     addKspDependency(target)
 
     configureKspTask(target) {
         addKspArguments(
-            KSP_PAGES_PACKAGE_KEY to PackageUtils.resolvePackageShortcut(
-                this@configureKspTask.project.group.toString(),
-                kobwebBlock.pagesPackage.get()
-            )
+            KSP_PAGES_PACKAGE_KEY to kobwebBlock.prefixQualifiedPackage(kobwebBlock.pagesPackage.get())
         )
     }
 
@@ -54,8 +48,7 @@ fun Project.setupKspJvm(target: JvmTarget) {
     addKspDependency(target)
 
     configureKspTask(target) {
-        val apiPackage =
-            PackageUtils.resolvePackageShortcut(this.project.group.toString(), kobwebBlock.apiPackage.get())
+        val apiPackage = kobwebBlock.prefixQualifiedPackage(kobwebBlock.apiPackage.get())
         addKspArguments(KSP_API_PACKAGE_KEY to apiPackage)
     }
 }
@@ -63,6 +56,7 @@ fun Project.setupKspJvm(target: JvmTarget) {
 private val Project.kspExtension: KspExtension
     get() = extensions.getByType<KspExtension>()
 
+// Ideally KSP would support setting lazy values; tracking issue: https://github.com/google/ksp/issues/1465
 /**
  * Convenience method for registering key/value parameters that can be read by KSP.
  *
