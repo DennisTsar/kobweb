@@ -5,6 +5,8 @@ import com.varabyte.kobweb.gradle.application.buildservices.KobwebTaskListener
 import com.varabyte.kobweb.gradle.application.extensions.app
 import com.varabyte.kobweb.gradle.application.extensions.createAppBlock
 import com.varabyte.kobweb.gradle.application.extensions.export
+import com.varabyte.kobweb.gradle.application.extensions.remoteDebugging
+import com.varabyte.kobweb.gradle.application.extensions.server
 import com.varabyte.kobweb.gradle.application.ksp.kspBackendFile
 import com.varabyte.kobweb.gradle.application.ksp.kspFrontendFile
 import com.varabyte.kobweb.gradle.application.tasks.KobwebBrowserCacheIdTask
@@ -151,7 +153,7 @@ class KobwebApplicationPlugin @Inject constructor(
             .register<KobwebCreateServerScriptsTask>("kobwebCreateServerScripts")
         val kobwebStartTask = run {
             val reuseServer = project.findProperty("kobwebReuseServer")?.let { it.toString().toBoolean() } ?: true
-            project.tasks.register<KobwebStartTask>("kobwebStart", kobwebBlock, env, runLayout, reuseServer)
+            project.tasks.register<KobwebStartTask>("kobwebStart", env, runLayout, reuseServer)
         }
 
         val kobwebSyncServerPluginJarsTask = project.tasks.register<Sync>("kobwebSyncServerPluginJars") {
@@ -163,13 +165,15 @@ class KobwebApplicationPlugin @Inject constructor(
         }
 
         kobwebStartTask.configure {
+            remoteDebugging.set(kobwebBlock.app.server.remoteDebugging)
             serverJar.set(kobwebUnpackServerJarTask.map { RegularFile { it.getServerJar() } })
             serverPluginsDir.set(kobwebSyncServerPluginJarsTask.map {
                 project.objects.directoryProperty().apply { set(it.destinationDir) }.get()
             })
+            val devScript = kobwebConf.server.files.dev.script
+            val devScriptFile = project.file(devScript)
             doLast {
-                val devScript = kobwebConf.server.files.dev.script
-                if (env == ServerEnvironment.DEV && !project.file(devScript).exists()) {
+                if (env == ServerEnvironment.DEV && !devScriptFile.exists()) {
                     throw GradleException(
                         "e: Your .kobweb/conf.yaml dev script (\"$devScript\") could not be found. This will cause " +
                             "the page to fail to load with a 500 error. Perhaps search your build/ directory for " +
@@ -371,7 +375,7 @@ class KobwebApplicationPlugin @Inject constructor(
             }
 
             val kobwebGenApisFactoryTask = project.tasks
-                .register<KobwebGenerateApisFactoryTask>("kobwebGenApisFactory", kobwebBlock)
+                .register<KobwebGenerateApisFactoryTask>("kobwebGenApisFactory", kobwebBlock.app, kobwebBlock)
 
             kobwebGenApisFactoryTask.configure {
                 kspGenFile.set(project.kspBackendFile(jvmTarget))
