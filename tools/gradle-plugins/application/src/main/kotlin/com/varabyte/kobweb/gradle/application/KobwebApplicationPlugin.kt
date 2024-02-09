@@ -335,14 +335,14 @@ class KobwebApplicationPlugin @Inject constructor(
                 .matching { it.name == jsTarget.compileProductionExecutableKotlin }
                 .configureEach { mustRunAfter(kobwebStartTask) }
 
-            kobwebStartTask.configure {
-                // PROD env uses files copied over into a site folder by the export task, so it doesn't need to trigger
-                // much.
-                if (env == ServerEnvironment.DEV) {
-                    val webpackTask = project.tasks.named(jsTarget.browserDevelopmentWebpack)
-                    dependsOn(webpackTask)
-                }
-            }
+//            kobwebStartTask.configure {
+//                // PROD env uses files copied over into a site folder by the export task, so it doesn't need to trigger
+//                // much.
+//                if (env == ServerEnvironment.DEV) {
+//                    val webpackTask = project.tasks.named(jsTarget.browserDevelopmentWebpack)
+//                    dependsOn(webpackTask)
+//                }
+//            }
 
             kobwebExportTask.configure {
                 appDataFile.set(kobwebCacheAppDataTask.flatMap { it.appDataFile })
