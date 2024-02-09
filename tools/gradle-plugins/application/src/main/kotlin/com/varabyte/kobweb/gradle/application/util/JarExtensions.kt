@@ -25,16 +25,15 @@ import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 fun KotlinJvmTarget.kobwebServerJar(kobwebName: String? = null) {
     val archiveFileName = (kobwebName ?: project.suggestKobwebProjectName()).suffixIfNot(".jar")
     val jvmTarget = JvmTarget(this)
+    val patterns = PatternSet().apply {
+        exclude("$KOBWEB_METADATA_SUBFOLDER/**")
+    }
+    val classpathFiles = project.configurations.named(jvmTarget.runtimeClasspath).map { configuration ->
+        configuration.map { if (it.isDirectory) it else project.zipTree(it).matching(patterns) }
+    }
     project.tasks.named<Jar>(jvmTarget.jar) {
         this.archiveFileName = archiveFileName
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-        val patterns = PatternSet().apply {
-            exclude("$KOBWEB_METADATA_SUBFOLDER/**")
-        }
-        val classpathFiles = project.configurations.named(jvmTarget.runtimeClasspath).map { configuration ->
-            configuration.map { if (it.isDirectory) it else project.zipTree(it).matching(patterns) }
-        }
         from(classpathFiles)
     }
 }
