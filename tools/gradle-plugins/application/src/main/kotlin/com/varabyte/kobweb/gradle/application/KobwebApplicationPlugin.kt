@@ -226,21 +226,28 @@ class KobwebApplicationPlugin @Inject constructor(
             .registerIfAbsent("kobweb-task-listener", KobwebTaskListener::class.java) {}
         run {
             var isBuilding = false
-            var isServerRunning = run {
-                val stateFile = ServerStateFile(kobwebFolder)
-                stateFile.content?.let { serverState ->
-                    ProcessHandle.of(serverState.pid).isPresent
-                }
-            } ?: false
+            // Initialize to null to avoid reading the state file in the configuration phase, which would cause
+            // configuration cache invalidation when the file changes.
+            // We instead read the file in the onFinish callback, which is called in the execution phase.
+            // Note that this may still cause configuration cache issues in a project which uses kobweb as an
+            // includeBuild (e.g. playground), but it should be fine for standalone projects.
+            // See also: TODO("Gradle Issue Link") for the includeBuild issue
+            var isServerRunning: Boolean? = null
 
             taskListenerService.get().onFinishCallbacks.add { event ->
+                if (isServerRunning == null) {
+                    val stateFile = ServerStateFile(kobwebFolder)
+                    isServerRunning = stateFile.content?.let { serverState ->
+                        ProcessHandle.of(serverState.pid).isPresent
+                    } ?: false
+                }
                 if (kobwebStartTask.name !in project.gradle.startParameter.taskNames) return@add
 
                 val taskName = event.descriptor.name.substringAfterLast(":")
                 val serverRequestsFile = ServerRequestsFile(kobwebFolder)
                 val taskFailed = event.result is FailureResult
 
-                if (isServerRunning) {
+                if (isServerRunning!!) {
                     if (taskFailed) {
                         serverRequestsFile.enqueueRequest(
                             ServerRequest.SetStatus(
