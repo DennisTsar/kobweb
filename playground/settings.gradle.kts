@@ -7,7 +7,10 @@ pluginManagement {
 
 rootProject.name = "playground"
 
-includeBuild("../")
+includeBuild("../backend")
+includeBuild("../common")
+includeBuild("../frontend")
+includeBuild("../tools")
 
 include(":site")
 include(":sitelib")

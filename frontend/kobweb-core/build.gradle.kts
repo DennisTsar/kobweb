@@ -22,7 +22,7 @@ kotlin {
             implementation(compose.html.core)
             implementation(libs.kotlinx.serialization.json)
             api(projects.frontend.composeHtmlExt)
-            implementation(projects.common.clientServerModels)
+            implementation("com.varabyte.kobweb:client-server-models")
             api(projects.frontend.kobwebWorkerInterface)
         }
     }

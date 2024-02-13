@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.playwright)
     implementation(libs.jsoup)
 
-    implementation(projects.common.kobwebCommon)
+    implementation("com.varabyte.kobweb:kobweb-common")
 }
 
 val DESCRIPTION = "A Gradle plugin that completes a user's Kobweb app"
@@ -51,7 +51,9 @@ val serverJar by configurations.registering {
 }
 dependencies {
     @Suppress("UnstableApiUsage")
-    serverJar(project(projects.backend.server.dependencyProject.path, configuration = "shadow"))
+    serverJar("com.varabyte.kobweb.server:server") {
+        targetConfiguration = "shadow"
+    }
 }
 
 /**

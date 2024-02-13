@@ -13,7 +13,7 @@ dependencies {
     implementation(libs.bundles.commonmark)
     implementation(libs.jsoup)
 
-    implementation(projects.common.kobwebCommon)
+    implementation("com.varabyte.kobweb:kobweb-common")
 
     // Compile only - the plugin itself should exist at runtime, provided by either the
     // Library or Application plugin.

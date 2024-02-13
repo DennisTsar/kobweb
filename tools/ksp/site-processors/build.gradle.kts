@@ -11,7 +11,7 @@ version = libs.versions.kobweb.libs.get()
 dependencies {
     implementation(libs.ksp.processing)
     implementation(libs.kotlinx.serialization.json)
-    implementation(projects.common.kobwebCommon)
+    implementation("com.varabyte.kobweb:kobweb-common")
     implementation(projects.tools.processorCommon)
     implementation(projects.tools.ksp.kspExt)
 }

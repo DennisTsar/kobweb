@@ -16,7 +16,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.ksp.plugin)
 
-    implementation(projects.common.kobwebCommon)
+    implementation("com.varabyte.kobweb:kobweb-common")
     api(projects.tools.processorCommon)
 }
 

@@ -17,8 +17,8 @@ kotlin {
 
     sourceSets {
         jsMain.dependencies {
-            api(projects.kobweb.common.kobwebSerialization)
-            api(projects.kobweb.frontend.kobwebWorkerInterface)
+            api("com.varabyte.kobweb:kobweb-serialization")
+            api(projects.kobwebWorkerInterface)
         }
     }
 }

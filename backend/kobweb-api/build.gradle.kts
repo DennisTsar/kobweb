@@ -3,6 +3,7 @@ import com.varabyte.kobweb.gradle.publish.set
 plugins {
     alias(libs.plugins.kotlin.jvm)
     id("com.varabyte.kobweb.internal.publish")
+    id("com.varabyte.kobweb.convention-base")
 }
 
 group = "com.varabyte.kobweb"

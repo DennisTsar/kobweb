@@ -21,7 +21,7 @@ dependencies {
     // For creating a metadata file
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(projects.common.kobwebCommon)
+    implementation("com.varabyte.kobweb:kobweb-common")
 }
 
 val DESCRIPTION = "A Gradle plugin that generates useful code for a user's Kobweb library"
