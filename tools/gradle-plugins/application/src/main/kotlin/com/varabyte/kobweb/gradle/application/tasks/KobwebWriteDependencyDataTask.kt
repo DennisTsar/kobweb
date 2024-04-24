@@ -3,7 +3,6 @@ package com.varabyte.kobweb.gradle.application.tasks
 import com.varabyte.kobweb.gradle.core.metadata.LibraryMetadata
 import com.varabyte.kobweb.gradle.core.metadata.ModuleMetadata
 import com.varabyte.kobweb.gradle.core.metadata.WorkerMetadata
-import com.varabyte.kobweb.gradle.core.util.searchZipFor
 import com.varabyte.kobweb.ksp.KOBWEB_METADATA_FRONTEND
 import com.varabyte.kobweb.ksp.KOBWEB_METADATA_LIBRARY
 import com.varabyte.kobweb.ksp.KOBWEB_METADATA_MODULE
@@ -13,12 +12,14 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import javax.inject.Inject
 
 // NOTE: This task in meant as an internal API so it does not inherit from KobwebTask
 // TODO: docs
@@ -102,11 +103,16 @@ abstract class KobwebWriteDependencyDataTask : DefaultTask() {
         jsOutput.get().asFile.writeText(Json.encodeToString(JsDependencyData(libraries, workers)))
     }
 
+    @get:Inject
+    abstract val archiveOperations: ArchiveOperations
+
     private inline fun <reified T> File.findDataInZip(path: String): T? {
         var data: T? = null
-        searchZipFor(path) { bytes ->
-            data = Json.decodeFromString<T>(bytes.decodeToString())
-        }
+        // TODO: what if file is path? also should we catch exceptions? See KobwebCopyTask
+        archiveOperations.zipTree(this)
+            .matching { include(path) }
+            .visit { if (!isDirectory) data = Json.decodeFromString<T>(this.file.readText()) }
+
         return data
     }
 }
