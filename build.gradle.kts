@@ -8,7 +8,8 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     `kotlin-dsl` apply false
     alias(libs.plugins.kotlinx.serialization) apply false
-    alias(libs.plugins.jetbrains.compose) apply false
+    //alias(libs.plugins.jetbrains.compose) apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0-RC2-238" apply false
 }
 
 subprojects {
@@ -21,6 +22,7 @@ subprojects {
                 includeGroup("com.varabyte.truthish")
             }
         }
+        maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/dev/")
     }
 
     // Require Java 11 for a few APIs. A very important one is ProcessHandle, used for detecting if a

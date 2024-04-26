@@ -2,7 +2,8 @@ import com.varabyte.kobweb.gradle.application.util.configAsKobwebApplication
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.jetbrains.compose)
+    //alias(libs.plugins.jetbrains.compose)
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.varabyte.kobweb.application")
     id("com.varabyte.kobwebx.markdown")
 }
@@ -27,14 +28,17 @@ kobweb {
 
 kotlin {
     configAsKobwebApplication(includeServer = true)
+//    js {
+//        compilerOptions.target = "es2015"
+//    }
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
+            implementation("org.jetbrains.compose.runtime:runtime:1.6.10-beta02")
         }
         jsMain {
             dependencies {
-                implementation(compose.html.core)
+                implementation("org.jetbrains.compose.html:html-core:1.6.10-beta02")
                 implementation("com.varabyte.kobweb:kobweb-core")
                 implementation("com.varabyte.kobweb:kobweb-silk")
                 implementation("com.varabyte.kobwebx:silk-icons-fa")
