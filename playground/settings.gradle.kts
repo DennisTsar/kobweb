@@ -6,6 +6,17 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            val kotlinVersion = System.getenv("kotlin_version")
+            if (kotlinVersion != null) {
+                version("kotlin", kotlinVersion)
+            }
+        }
+    }
+}
+
 rootProject.name = "playground"
 
 includeBuild("../")

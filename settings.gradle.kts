@@ -6,6 +6,18 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            val kotlinVersion = System.getenv("kotlin_version")
+            if (kotlinVersion != null) {
+                version("kotlin", kotlinVersion)
+            }
+        }
+    }
+}
+
+
 rootProject.name = "kobweb"
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

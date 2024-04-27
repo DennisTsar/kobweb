@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.jvm) apply false
-    `kotlin-dsl` apply false
+//    `kotlin-dsl` apply false
     alias(libs.plugins.kotlinx.serialization) apply false
     //alias(libs.plugins.jetbrains.compose) apply false
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.0-RC2-238" apply false

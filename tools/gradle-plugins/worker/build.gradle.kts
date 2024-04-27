@@ -1,4 +1,5 @@
 plugins {
+    alias(libs.plugins.kotlin.jvm)
     `kotlin-dsl`
     id("com.varabyte.kobweb.internal.publish")
     alias(libs.plugins.kotlinx.serialization)
@@ -15,7 +16,7 @@ dependencies {
     api(projects.tools.gradlePlugins.core)
 
     // Used by the "core" plugin & required to satisfy the validatePlugins task
-    implementation(projects.common.kobwebCommon)
+//    compileOnly(projects.common.kobwebCommon)
 
     implementation(libs.kotlinx.serialization.json)
 }
