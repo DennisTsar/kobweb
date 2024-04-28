@@ -15,6 +15,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -23,7 +24,6 @@ import javax.inject.Inject
 
 // NOTE: This task in meant as an internal API so it does not inherit from KobwebTask
 // TODO: docs
-// TODO: is jvm a separate task or what?
 /**
  * Collect all app data from the current site and all library dependencies, writing the result to [libraryOutput].
  *
@@ -47,31 +47,26 @@ import javax.inject.Inject
  * }
  * ```
  */
-abstract class KobwebWriteDependencyDataTask : DefaultTask() {
+abstract class KobwebWriteJsDependencyDataTask : DefaultTask() {
     init {
         description = "Search the project's dependencies and store all Kobweb metadata, " +
             "at which point it can be looked up by downstream tasks that need it."
     }
 
     @get:InputFiles
-    abstract val jsCompileClasspath: ConfigurableFileCollection
+    abstract val compileClasspath: ConfigurableFileCollection
 
     @get:OutputFile
-    abstract val jsOutput: RegularFileProperty
+    abstract val libraryOutput: RegularFileProperty
 
-//    @get:InputFiles
-//    @get:Optional
-//    abstract val jvmCompileClasspath: ConfigurableFileCollection
-
-//    @get:OutputFile
-//    @get:Optional
-//    abstract val jvmOutput: RegularFileProperty
+    @get:OutputFile
+    abstract val workerOutput: RegularFileProperty
 
     @TaskAction
     fun execute() {
         val libraries = mutableListOf<JsLibraryData>()
         val workers = mutableListOf<JsWorkerData>()
-        jsCompileClasspath.forEach { file ->
+        compileClasspath.forEach { file ->
             val moduleMetadata = file.findDataInZip<ModuleMetadata>(KOBWEB_METADATA_MODULE)
                 ?: return@forEach
 
@@ -82,8 +77,8 @@ abstract class KobwebWriteDependencyDataTask : DefaultTask() {
                 libraries.add(
                     JsLibraryData(
                         moduleMetadata = moduleMetadata,
-                        path = file.invariantSeparatorsPath,
-                        libraryMetadata = libraryMetadata,
+                        filename = file.name,
+                        metadata = libraryMetadata,
                         frontendData = frontendData
                     )
                 )
@@ -95,21 +90,30 @@ abstract class KobwebWriteDependencyDataTask : DefaultTask() {
             workers.add(
                 JsWorkerData(
                     moduleMetadata = moduleMetadata,
-                    path = file.invariantSeparatorsPath,
-                    workerMetadata = workerMetadata
+                    filename = file.name,
+                    metadata = workerMetadata
                 )
             )
         }
-        jsOutput.get().asFile.writeText(Json.encodeToString(JsDependencyData(libraries, workers)))
+        libraryOutput.get().asFile.writeText(Json.encodeToString(libraries))
+        workerOutput.get().asFile.writeText(Json.encodeToString(workers))
     }
 
     @get:Inject
     abstract val archiveOperations: ArchiveOperations
 
+    @get:Inject
+    abstract val objectFactory: ObjectFactory
+
     private inline fun <reified T> File.findDataInZip(path: String): T? {
         var data: T? = null
-        // TODO: what if file is path? also should we catch exceptions? See KobwebCopyTask
-        archiveOperations.zipTree(this)
+        // TODO: should we catch exceptions?
+        val fileTree = if (isDirectory) {
+            objectFactory.fileTree().from(this)
+        } else {
+            archiveOperations.zipTree(this)
+        }
+        fileTree
             .matching { include(path) }
             .visit { if (!isDirectory) data = Json.decodeFromString<T>(this.file.readText()) }
 
@@ -119,15 +123,20 @@ abstract class KobwebWriteDependencyDataTask : DefaultTask() {
 
 interface KobwebDependencyData {
     val moduleMetadata: ModuleMetadata
-    val path: String
-    val file get() = File(path)
+
+    // TODO: do we want to save full path? path relative to something? just name?
+    val filename: String
+
+    // TODO: should this exist?
+    val file get() = File(filename)
 }
 
 @Serializable
 class JsLibraryData(
     override val moduleMetadata: ModuleMetadata,
-    override val path: String,
-    val libraryMetadata: LibraryMetadata,
+    override val filename: String,
+    // TODO: var name should be "libraryMetadata" or just "metadata"?
+    val metadata: LibraryMetadata,
     // a library with a js target maye have no js sources & thus no frontend data
     val frontendData: FrontendData?,
 ) : KobwebDependencyData
@@ -135,12 +144,6 @@ class JsLibraryData(
 @Serializable
 class JsWorkerData(
     override val moduleMetadata: ModuleMetadata,
-    override val path: String,
-    val workerMetadata: WorkerMetadata,
+    override val filename: String,
+    val metadata: WorkerMetadata,
 ) : KobwebDependencyData
-
-@Serializable
-class JsDependencyData(
-    val libraries: List<JsLibraryData>,
-    val workers: List<JsWorkerData>,
-)

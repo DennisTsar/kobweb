@@ -26,6 +26,7 @@ import com.varabyte.kobweb.gradle.application.tasks.KobwebListRoutesTask
 import com.varabyte.kobweb.gradle.application.tasks.KobwebStartTask
 import com.varabyte.kobweb.gradle.application.tasks.KobwebStopTask
 import com.varabyte.kobweb.gradle.application.tasks.KobwebUnpackServerJarTask
+import com.varabyte.kobweb.gradle.application.tasks.KobwebWriteJsDependencyDataTask
 import com.varabyte.kobweb.gradle.application.util.kebabCaseToTitleCamelCase
 import com.varabyte.kobweb.gradle.core.KobwebCorePlugin
 import com.varabyte.kobweb.gradle.core.extensions.kobwebBlock
@@ -250,6 +251,13 @@ class KobwebApplicationPlugin @Inject constructor(
 
             project.setupKspJs(jsTarget, kspProcessorMode)
 
+            val kobwebWriteJsDepDataTask = project.tasks
+                .register<KobwebWriteJsDependencyDataTask>("kobwebWriteJsDepData") {
+                    compileClasspath.from(project.configurations.named(jsTarget.compileClasspath))
+                    libraryOutput.set(this.kobwebCacheFile("libraries.json"))
+                    workerOutput.set(this.kobwebCacheFile("workers.json"))
+                }
+
             val kobwebGenSiteEntryTask = project.tasks.register<KobwebGenerateSiteEntryTask>(
                 "kobwebGenSiteEntry",
                 kobwebConf.site.routePrefix,
@@ -260,7 +268,7 @@ class KobwebApplicationPlugin @Inject constructor(
 
             kobwebCacheAppDataTask.configure {
                 appFrontendMetadataFile.set(project.kspFrontendFile(jsTarget))
-                compileClasspath.from(project.configurations.named(jsTarget.compileClasspath))
+                libraryMetadata.set(kobwebWriteJsDepDataTask.flatMap { it.libraryOutput })
                 appDataFile.set(this.kobwebCacheFile("appData.json"))
             }
 
@@ -269,7 +277,7 @@ class KobwebApplicationPlugin @Inject constructor(
             }
 
             kobwebGenSiteIndexTask.configure {
-                compileClasspath.from(project.configurations.named(jsTarget.compileClasspath))
+                libraryMetadata.set(kobwebWriteJsDepDataTask.flatMap { it.libraryOutput })
             }
 
             val jsRunTasks = listOf(

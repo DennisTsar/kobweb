@@ -8,14 +8,9 @@ import com.varabyte.kobweb.gradle.application.extensions.AppBlock
 import com.varabyte.kobweb.gradle.application.extensions.app
 import com.varabyte.kobweb.gradle.application.templates.createIndexFile
 import com.varabyte.kobweb.gradle.core.extensions.KobwebBlock
-import com.varabyte.kobweb.gradle.core.metadata.LibraryIndexMetadata
-import com.varabyte.kobweb.gradle.core.metadata.LibraryMetadata
 import com.varabyte.kobweb.gradle.core.util.HtmlUtil
 import com.varabyte.kobweb.gradle.core.util.hasTransitiveJsDependencyNamed
 import com.varabyte.kobweb.gradle.core.util.isDescendantOf
-import com.varabyte.kobweb.gradle.core.util.searchZipFor
-import com.varabyte.kobweb.ksp.KOBWEB_METADATA_INDEX
-import com.varabyte.kobweb.ksp.KOBWEB_METADATA_LIBRARY
 import com.varabyte.kobweb.project.conf.KobwebConf
 import kotlinx.html.dom.append
 import kotlinx.html.dom.document
@@ -25,10 +20,11 @@ import kotlinx.html.link
 import kotlinx.html.unsafe
 import kotlinx.serialization.json.Json
 import org.gradle.api.GradleException
-import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
@@ -71,8 +67,8 @@ abstract class KobwebGenerateSiteIndexTask @Inject constructor(
             .map { it.file }
             .toList()
 
-    @get:InputFiles
-    abstract val compileClasspath: ConfigurableFileCollection
+    @get:InputFile
+    abstract val libraryMetadata: RegularFileProperty
 
     @OutputFile
     fun getGenIndexFile(): Provider<RegularFile> = kobwebBlock.app.getGenJsResRoot().map { it.file("index.html") }
@@ -115,24 +111,10 @@ abstract class KobwebGenerateSiteIndexTask @Inject constructor(
                 )
             }
 
-        compileClasspath.forEach { file ->
-            var libraryMetadata: LibraryMetadata? = null
+        val libraryDeps = Json.decodeFromString<List<JsLibraryData>>(libraryMetadata.get().asFile.readText())
 
-            file.searchZipFor(KOBWEB_METADATA_LIBRARY) { bytes ->
-                libraryMetadata = Json.decodeFromString(LibraryMetadata.serializer(), bytes.decodeToString())
-            }
-
-            if (libraryMetadata == null) {
-                // It's possible that we're loading a library that was built with an older version of Kobweb that used
-                // the index.json file instead of library.json. If so, we'll try to load it from there.
-                @Suppress("DEPRECATION")
-                file.searchZipFor(KOBWEB_METADATA_INDEX) { bytes ->
-                    libraryMetadata = Json.decodeFromString(LibraryIndexMetadata.serializer(), bytes.decodeToString())
-                        .toLibraryMetadata()
-                }
-            }
-
-            libraryMetadata?.index?.headElements?.let { headElementsData ->
+        libraryDeps.forEach { depData ->
+            depData.metadata.index.headElements?.let { headElementsData ->
                 // Support legacy library metadata that include the <head> tag itself
                 val headElementsStr = if (headElementsData.startsWith("<head")) {
                     val document = Jsoup.parse(headElementsData)
@@ -164,17 +146,17 @@ abstract class KobwebGenerateSiteIndexTask @Inject constructor(
                     append.head { unsafe { raw(headElementsStr) } }
                 }.serialize().lines().drop(3).dropLast(2).joinToString("\n").trimIndent()
 
-                val optedOut = indexBlock.excludeHtmlForDependencies.get().any { file.name.startsWith(it) }
-                    || indexBlock.excludeTags.orNull?.invoke(AppBlock.IndexBlock.ExcludeTagsContext(file.name)) ?: false
+                val optedOut = indexBlock.excludeHtmlForDependencies.get().any { depData.filename.startsWith(it) }
+                    || indexBlock.excludeTags.orNull?.invoke(AppBlock.IndexBlock.ExcludeTagsContext(depData.filename)) ?: false
 
                 if (!optedOut) {
                     if (indexBlock.suppressHtmlWarningsForDependencies.get()
-                            .none { file.name.startsWith(it) }
+                            .none { depData.filename.startsWith(it) }
                     ) {
-                        val dep = file.nameWithoutExtension.substringBeforeLast("-js-")
+                        val dep = depData.file.nameWithoutExtension.substringBeforeLast("-js-")
                         logger.warn(buildString {
                             appendLine()
-                            appendLine("Dependency artifact \"${file.name}\" will add the following <head> elements to your site's index.html:")
+                            appendLine("Dependency artifact \"${depData.filename}\" will add the following <head> elements to your site's index.html:")
                             appendLine(headPrettyPrint)
                             appendLine("You likely want to let them do this, as it is probably necessary for the library's functionality, but you should still audit what they're doing.")
                             append(
@@ -186,7 +168,7 @@ abstract class KobwebGenerateSiteIndexTask @Inject constructor(
                 } else {
                     logger.warn(buildString {
                         appendLine()
-                        appendLine("Dependency artifact \"${file.name}\" was prevented from adding the following <head> elements to your site's index.html:")
+                        appendLine("Dependency artifact \"${depData.filename}\" was prevented from adding the following <head> elements to your site's index.html:")
                         append(headPrettyPrint)
                     })
                 }
