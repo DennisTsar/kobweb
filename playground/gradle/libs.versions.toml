@@ -1,5 +1,5 @@
 [versions]
-jetbrains-compose = "1.6.10-beta03"
+jetbrains-compose = "1.6.2"
 kotlin = "2.0.0-RC2"
 kotlinx-serialization = "1.6.3"
 
