@@ -1,4 +1,5 @@
 import com.varabyte.kobweb.gradle.library.util.configAsKobwebLibrary
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -17,10 +18,8 @@ kotlin {
     configAsKobwebLibrary(includeServer = true)
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(libs.compose.runtime)
-        }
         jsMain.dependencies {
+            implementation(libs.compose.runtime)
             implementation(libs.compose.html.core)
             implementation("com.varabyte.kobweb:kobweb-core")
             implementation("com.varabyte.kobweb:kobweb-silk")
@@ -31,3 +30,5 @@ kotlin {
         }
     }
 }
+
+composeCompiler.targetKotlinPlatforms = setOf(KotlinPlatformType.js)

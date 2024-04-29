@@ -1,5 +1,5 @@
 import com.varabyte.kobweb.gradle.application.util.configAsKobwebApplication
-import kotlinx.html.meta
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -30,19 +30,15 @@ kotlin {
     configAsKobwebApplication(includeServer = true)
 
     sourceSets {
-        commonMain.dependencies {
+        jsMain.dependencies {
             implementation(libs.compose.runtime)
-        }
-        jsMain {
-            dependencies {
-                implementation(libs.compose.html.core)
-                implementation("com.varabyte.kobweb:kobweb-core")
-                implementation("com.varabyte.kobweb:kobweb-silk")
-                implementation("com.varabyte.kobwebx:silk-icons-fa")
-                implementation("com.varabyte.kobwebx:kobwebx-markdown")
-                implementation(project(":sitelib"))
-                implementation(project(":worker"))
-            }
+            implementation(libs.compose.html.core)
+            implementation("com.varabyte.kobweb:kobweb-core")
+            implementation("com.varabyte.kobweb:kobweb-silk")
+            implementation("com.varabyte.kobwebx:silk-icons-fa")
+            implementation("com.varabyte.kobwebx:kobwebx-markdown")
+            implementation(project(":sitelib"))
+            implementation(project(":worker"))
         }
         jvmMain.dependencies {
             implementation("com.varabyte.kobweb:kobweb-api")
@@ -50,3 +46,5 @@ kotlin {
         }
     }
 }
+
+composeCompiler.targetKotlinPlatforms = setOf(KotlinPlatformType.js)
