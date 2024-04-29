@@ -16,37 +16,40 @@ import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
 
 // NOTE: This task in meant as an internal API so it does not inherit from KobwebTask
-// TODO: docs
 /**
- * Collect all app data from the current site and all library dependencies, writing the result to [libraryOutput].
+ * Collect all JS metadata from kobweb dependencies, writing the results to [libraryOutput] and [workerOutput].
  *
  * This is done so that multiple tasks can read the same values from a single, cached file. Those tasks should take
- * `appDataFile` as an input and then deserialize it in their execute method:
+ * the relevant output location as an input and then deserialize it in their execute method:
  *
  * ```
  * // Configuring the task
- * myAppDataUsingTask.configure {
- *   appDataFile.set(kobwebCacheAppDataTask.flatMap { it.appDataFile })
+ * myMetadataUsingTask.configure {
+ *   appDataFile.set(kobwebWriteJsDepDataTask.flatMap { it.libraryOutput })
  * }
  *
  * // Inside the task
  * @get:InputFile
- * abstract val appDataFile: RegularFileProperty
+ * abstract val libraryDataFile: RegularFileProperty
  *
  * @TaskAction
  * fun execute() {
- *   val appData = Json.decodeFromString<AppData>(appDataFile.get().asFile.readText())
+ *   val libraryData = Json.decodeFromString<List<JsLibraryData>>(libraryDataFile.get().asFile.readText())
  *   // ...
  * }
  * ```
  */
+@CacheableTask
 abstract class KobwebWriteJsDependencyDataTask : DefaultTask() {
     init {
         description = "Search the project's dependencies and store all Kobweb metadata, " +
@@ -54,6 +57,7 @@ abstract class KobwebWriteJsDependencyDataTask : DefaultTask() {
     }
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val compileClasspath: ConfigurableFileCollection
 
     @get:OutputFile
@@ -127,7 +131,7 @@ interface KobwebDependencyData {
     // TODO: do we want to save full path? path relative to something? just name?
     val filename: String
 
-    // TODO: should this exist?
+    // TODO: should this exist? currently it exists so that "file.nameWithoutExtension" can be used
     val file get() = File(filename)
 }
 
