@@ -1,6 +1,7 @@
 package com.varabyte.kobweb.navigation
 
 import androidx.compose.runtime.*
+import com.varabyte.kobweb.compose.startViewTransition
 import com.varabyte.kobweb.core.init.KobwebConfig
 import com.varabyte.kobweb.core.rememberPageContext
 import org.jetbrains.compose.web.dom.A
@@ -49,12 +50,13 @@ fun Anchor(
                     ?: evt.toOpenLinkStrategy(KobwebConfig.Instance.openLinkStrategies.internal)
                 val openExternalLinksStrategy = openExternalLinksStrategy
                     ?: evt.toOpenLinkStrategy(KobwebConfig.Instance.openLinkStrategies.external)
-                ctx.router.navigateTo(
-                    href,
-                    updateHistoryMode ?: UpdateHistoryMode.PUSH,
-                    openInternalLinksStrategy = openInternalLinksStrategy,
-                    openExternalLinksStrategy = openExternalLinksStrategy,
-                )
+                startViewTransition {
+                    ctx.router.navigateTo(
+                        href,
+                        updateHistoryMode ?: UpdateHistoryMode.PUSH,openInternalLinksStrategy = openInternalLinksStrategy,
+                        openExternalLinksStrategy = openExternalLinksStrategy,
+                    )
+                }
                 evt.preventDefault()
                 evt.stopPropagation()
             }

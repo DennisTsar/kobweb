@@ -12,6 +12,8 @@ import com.varabyte.kobweb.silk.components.layout.Surface
 import com.varabyte.kobweb.silk.init.InitSilk
 import com.varabyte.kobweb.silk.init.InitSilkContext
 import com.varabyte.kobweb.silk.init.registerStyleBase
+import com.varabyte.kobweb.silk.style.animation.Keyframes
+import com.varabyte.kobweb.silk.style.animation.toAnimation
 import com.varabyte.kobweb.silk.style.common.SmoothColorStyle
 import com.varabyte.kobweb.silk.style.toModifier
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
@@ -62,6 +64,45 @@ fun registerGlobalStyles(ctx: InitSilkContext) = ctx.stylesheet.apply {
 
     registerStyleBase("#md-inline-demo") {
         Modifier.color(Colors.OrangeRed)
+    }
+    registerStyleBase("::view-transition-old(my-header)") {
+        Modifier
+            .animation(
+                FullSlideToLeft.toAnimation(
+                    ColorMode.LIGHT,
+                    duration = 300.ms,
+                    timingFunction = AnimationTimingFunction.EaseOut,
+                    fillMode = AnimationFillMode.Both
+                )
+            )
+    }
+    registerStyleBase("::view-transition-new(my-header)") {
+        Modifier
+            .animation(
+                FullSlideFromRight.toAnimation(
+                    ColorMode.LIGHT,
+                    duration = 300.ms,
+                    timingFunction = AnimationTimingFunction.EaseOut,
+                    fillMode = AnimationFillMode.Both
+                )
+            )
+    }
+}
+
+val FullSlideFromRight = Keyframes {
+    from {
+        Modifier
+            .opacity(0)
+            .transform { translateX(1000.percent) }
+    }
+}
+val FullSlideToLeft = Keyframes {
+    to {
+        Modifier
+            .opacity(0)
+            .transform {
+                translateX(-(1000).percent)
+            }
     }
 }
 

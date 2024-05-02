@@ -147,6 +147,7 @@ fun WidgetsPage() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             WidgetSection("Button") {
+                Box(TestStyle.toModifier().size(250.px).backgroundColor(Colors.Purple).borderRadius(5.percent))
                 Column(Modifier.gap(0.5.cssRem)) {
                     listOf(null, ColorPalettes.Red, ColorPalettes.Blue, ColorPalettes.Green).forEach { colorPalette ->
                         Row(Modifier.gap(1.cssRem), verticalAlignment = Alignment.CenterVertically) {
