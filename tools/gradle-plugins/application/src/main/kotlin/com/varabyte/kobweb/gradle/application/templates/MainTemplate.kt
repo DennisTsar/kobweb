@@ -45,6 +45,7 @@ fun createMainFunction(
             "$KOBWEB_GROUP.navigation.RoutePrefix",
             "$KOBWEB_GROUP.navigation.Router",
             "$KOBWEB_GROUP.navigation.UpdateHistoryMode",
+            "$KOBWEB_GROUP.compose.MyMonotonicClockImpl",
             "kotlinx.browser.document",
             "kotlinx.browser.window",
             "org.jetbrains.compose.web.renderComposable",
@@ -244,7 +245,7 @@ fun createMainFunction(
                     "AppGlobals.initialize(mapOf(${Array(appGlobals.size) { "%S to %S" }.joinToString()}))",
                     *appGlobals.flatMap { entry -> listOf(entry.key, entry.value) }.toTypedArray()
                 )
-                addStatement("renderComposable(rootElementId = \"root\") {")
+                addStatement("renderComposable(document.getElementById(\"root\")!!, MyMonotonicClockImpl()) {")
                 withIndent {
                     addStatement("$appFqn {")
                     withIndent {
