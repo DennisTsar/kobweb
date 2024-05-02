@@ -4,9 +4,13 @@ import androidx.compose.runtime.*
 import com.varabyte.kobweb.browser.util.invokeLater
 import kotlinx.browser.document
 import kotlinx.browser.window
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.promise
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Promise
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -19,9 +23,24 @@ import kotlin.time.toDuration
 // regain it after the transition is done. This might be intended behavior? But worth looking into.
 
 // `action` must return a Promise so that startViewTransition awaits it (and thus awaits the recomposition)
-fun startViewTransition(action: () -> Promise<*>): dynamic {
-    val document = document.asDynamic()
-    return if (document.startViewTransition != undefined) document.startViewTransition(action) else action()
+private fun startViewTransitionRaw(action: () -> Promise<*>): dynamic {
+    return document.asDynamic().startViewTransition(action)
+}
+
+fun startViewTransition(action: () -> Unit): dynamic {
+    if (document.asDynamic().startViewTransition == undefined) {
+        action()
+        return null
+    }
+    return startViewTransitionRaw {
+        // delay seems to be needed for the change to happen
+        MainScope().promise { action(); delay(1.milliseconds) }
+        // THis would also work
+//        Promise { resolve, _ ->
+//            action()
+//            window.setTimeout(1.milliseconds) { resolve(Unit) }
+//        }
+    }
 }
 
 
