@@ -44,6 +44,7 @@ fun createMainFunction(
             "$KOBWEB_GROUP.navigation.BasePath",
             "$KOBWEB_GROUP.navigation.Router",
             "$KOBWEB_GROUP.navigation.UpdateHistoryMode",
+            "$KOBWEB_GROUP.compose.MyMonotonicClockImpl",
             "kotlinx.browser.document",
             "kotlinx.browser.window",
             "org.jetbrains.compose.web.renderComposable",
@@ -254,7 +255,7 @@ fun createMainFunction(
             }.build())
 
             addCode(CodeBlock.Builder().apply {
-                addStatement("renderComposable(rootElementId = \"root\") {")
+                addStatement("renderComposable(document.getElementById(\"root\")!!, MyMonotonicClockImpl()) {")
                 withIndent {
                     addStatement("$appFqn {")
                     withIndent {
