@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.jetbrains.compose)
     id("com.varabyte.kobweb.library")
 }
 
