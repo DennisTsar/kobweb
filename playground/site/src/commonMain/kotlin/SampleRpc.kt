@@ -4,6 +4,6 @@ import kotlinx.rpc.RPCEagerField
 
 interface MyService : RPC {
     @RPCEagerField
-    val myFlow: StateFlow<String>
+    val keyFlow: StateFlow<String>
     suspend fun sayHello(firstName: String, lastName: String, age: Int): String
 }

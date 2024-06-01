@@ -99,10 +99,10 @@ fun initTest1(ctx: InitApiContext) {
 }
 
 class MyServiceImpl(override val coroutineContext: CoroutineContext) : MyService {
-    private val _myFlow = MutableStateFlow("a")
-    override val myFlow = _myFlow
+    private val _myFlow = MutableStateFlow(Random.nextInt().toString())
+    override val keyFlow = _myFlow
     override suspend fun sayHello(firstName: String, lastName: String, age: Int): String {
-        return "hello $firstName $lastName $age"
+        return "Hello, $firstName $lastName (age $age)"
     }
 
     init {
