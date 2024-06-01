@@ -11,7 +11,11 @@ import com.varabyte.kobweb.silk.theme.colors.ColorMode
 import com.varabyte.kobweb.silk.theme.colors.suffixedWith
 import org.jetbrains.compose.web.css.*
 
-interface CssStyleRegistrar {
+@DslMarker
+private annotation class StylesheetDsl
+
+@StylesheetDsl
+interface StyleRegistrar {
     /**
      * An alternate way to register global styles with Silk instead of using a Compose HTML StyleSheet directly.
      *
@@ -67,7 +71,7 @@ interface CssStyleRegistrar {
  * You can use this as a replacement for defining your own stylesheet using Compose HTML. In addition to being fewer
  * lines of code, this provides an API that lets you work with [Modifier]s for providing styles.
  */
-interface SilkStylesheet : CssStyleRegistrar {
+interface SilkStylesheet : StyleRegistrar {
     /**
      * Users can specify custom CSS layers here, to extend the initial set provided by Silk.
      *
@@ -80,13 +84,13 @@ interface SilkStylesheet : CssStyleRegistrar {
     /**
      * Create a layer which then wraps a collection of CSS styles.
      */
-    fun layer(name: String, block: CssStyleRegistrar.() -> Unit)
+    fun layer(name: String, block: StyleRegistrar.() -> Unit)
     fun registerKeyframes(name: String, build: KeyframesBuilder.() -> Unit)
 }
 
-fun SilkStylesheet.layer(layer: SilkLayer, block: CssStyleRegistrar.() -> Unit) = layer(layer.layerName, block)
+fun SilkStylesheet.layer(layer: SilkLayer, block: StyleRegistrar.() -> Unit) = layer(layer.layerName, block)
 
-private class CssStyleRegistrarImpl : CssStyleRegistrar {
+private class StyleRegistrarImpl : StyleRegistrar {
     class Entry(val cssSelector: String, val init: StyleScope.() -> Unit)
 
     private val _entries = mutableListOf<Entry>()
@@ -121,7 +125,7 @@ private class CssStyleRegistrarImpl : CssStyleRegistrar {
  * }
  * ```
  */
-fun CssStyleRegistrar.registerStyleBase(
+fun StyleRegistrar.registerStyleBase(
     cssSelector: String,
     init: () -> Modifier
 ) {
@@ -158,8 +162,8 @@ internal object SilkStylesheetInstance : SilkStylesheet {
         styles.add(SimpleCssStyle(cssSelector, init, { Modifier }, layer = null))
     }
 
-    override fun layer(name: String, block: CssStyleRegistrar.() -> Unit) {
-        val styleEntries = CssStyleRegistrarImpl().apply(block).entries
+    override fun layer(name: String, block: StyleRegistrar.() -> Unit) {
+        val styleEntries = StyleRegistrarImpl().apply(block).entries
         styleEntries.forEach { entry ->
             entry.init.assertNoAttributeModifiers(entry.cssSelector)
             styles.add(
