@@ -1,6 +1,7 @@
 package com.varabyte.kobweb.ksp.backend
 
 import com.google.devtools.ksp.containingFile
+import com.google.devtools.ksp.getClassDeclarationByName
 import com.google.devtools.ksp.isPublic
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
@@ -12,16 +13,15 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.varabyte.kobweb.ksp.common.API_FQN
 import com.varabyte.kobweb.ksp.common.API_STREAM_FQN
-import com.varabyte.kobweb.ksp.common.API_STREAM_SIMPLE_NAME
 import com.varabyte.kobweb.ksp.common.INIT_API_FQN
 import com.varabyte.kobweb.ksp.common.PACKAGE_MAPPING_API_FQN
 import com.varabyte.kobweb.ksp.common.getPackageMappings
 import com.varabyte.kobweb.ksp.common.processRoute
 import com.varabyte.kobweb.ksp.symbol.getAnnotationsByName
-import com.varabyte.kobweb.ksp.symbol.resolveQualifiedName
 import com.varabyte.kobweb.ksp.symbol.suppresses
 import com.varabyte.kobweb.project.backend.ApiEntry
 import com.varabyte.kobweb.project.backend.ApiStreamEntry
@@ -52,12 +52,17 @@ class BackendProcessor(
     // will be skipped if the only change is deleted file(s) that we do not depend on.
     private val fileDependencies = mutableListOf<KSFile>()
 
+    // TODO: amke this better
+    lateinit var apiStreamType: KSType
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         initMethods += resolver.getSymbolsWithAnnotation(INIT_API_FQN).map { annotatedFun ->
             fileDependencies.add(annotatedFun.containingFile!!)
             val name = (annotatedFun as KSFunctionDeclaration).qualifiedName!!.asString()
             InitApiEntry(name)
         }
+
+        apiStreamType = resolver.getClassDeclarationByName(API_STREAM_FQN)!!.asType(emptyList())
 
         val newFiles = resolver.getNewFiles()
 
@@ -79,10 +84,7 @@ class BackendProcessor(
 
     private inner class ApiVisitor : KSVisitorVoid() {
         override fun visitPropertyDeclaration(property: KSPropertyDeclaration, data: Unit) {
-            val type = property.type.toString()
-            if (type != API_STREAM_SIMPLE_NAME) return
-
-            if (property.type.resolveQualifiedName() != API_STREAM_FQN) return
+            if (!apiStreamType.isAssignableFrom(property.type.resolve())) return
 
             val propertyName = property.simpleName.asString()
             val topLevelSuppression = "TOP_LEVEL_API_STREAM"
