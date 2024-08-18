@@ -1,7 +1,10 @@
 package com.varabyte.kobweb.silk.defer
 
 import androidx.compose.runtime.*
+import kotlinx.browser.document
 import kotlinx.browser.window
+import kotlinx.dom.clear
+import org.jetbrains.compose.web.renderComposable
 
 private class DeferredComposablesState {
     private var timeoutHandle = -1
@@ -22,7 +25,7 @@ private class DeferredComposablesState {
         }
     }
 
-    fun append(): Entry = Entry().also {
+    fun append(id: String?): Entry = Entry(id).also {
         invokeLater {
             entries.add(it)
         }
@@ -33,7 +36,7 @@ private class DeferredComposablesState {
         entries.forEach { render(it) }
     }
 
-    inner class Entry {
+    inner class Entry(val id: String?) {
         var content: (@Composable () -> Unit)? = null
         fun dismiss() {
             invokeLater {
@@ -57,9 +60,9 @@ private val LocalDeferred = staticCompositionLocalOf<DeferredComposablesState> {
  * Render deferral is particularly useful for overlays, like modals and tooltips.
  */
 @Composable
-fun deferRender(content: @Composable () -> Unit) {
+fun deferRender(id: String? = null, content: @Composable () -> Unit) {
     val state = LocalDeferred.current
-    val deferredEntry = remember(state) { state.append() }
+    val deferredEntry = remember(state) { state.append(id) }
     deferredEntry.content = content
     DisposableEffect(deferredEntry) { onDispose { deferredEntry.dismiss() } }
 }
@@ -78,6 +81,16 @@ fun renderWithDeferred(content: @Composable () -> Unit) {
     CompositionLocalProvider(LocalDeferred provides state) {
         content()
         state.forEach { entry ->
+            DisposableEffect(entry.id) {
+                if (entry.id == null) return@DisposableEffect onDispose { }
+                renderComposable(entry.id) {
+                    entry.content?.invoke()
+                }
+                onDispose {
+                    // Note: this resets the state when navigating between a page with & without this deferred content
+                    document.getElementById(entry.id)?.clear()
+                }
+            }
             // Deferred content itself may defer more content! Like showing a tooltip within an overlay
             // If we don't do this, we end up with the deferred list constantly getting modified and causing
             // recompositions as a result.
