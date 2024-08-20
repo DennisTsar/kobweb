@@ -16,6 +16,7 @@ import com.varabyte.kobweb.silk.components.navigation.LinkStyle
 import com.varabyte.kobweb.silk.components.navigation.UndecoratedLinkVariant
 import com.varabyte.kobweb.silk.components.overlay.PopupPlacement
 import com.varabyte.kobweb.silk.components.overlay.Tooltip
+import com.varabyte.kobweb.silk.components.text.SpanText
 import com.varabyte.kobweb.silk.style.ComponentKind
 import com.varabyte.kobweb.silk.style.CssName
 import com.varabyte.kobweb.silk.style.CssStyle
@@ -66,6 +67,7 @@ private fun NavLink(path: String, text: String) {
 @Composable
 fun NavHeader() {
     var colorMode by ColorMode.currentState
+    var counter by remember { mutableStateOf(0) }
     Box(NavHeaderStyle.toModifier()) {
         Row(
             Modifier.fillMaxSize(),
@@ -79,15 +81,16 @@ fun NavHeader() {
             Spacer()
 
             Button(
-                onClick = { colorMode = colorMode.opposite },
+                onClick = { counter++ },
                 NavItemStyle.toModifier(NavButtonVariant),
             ) {
+                SpanText(counter.toString())
                 when (colorMode) {
                     ColorMode.LIGHT -> FaMoon()
                     ColorMode.DARK -> FaSun()
                 }
             }
-            Tooltip(ElementTarget.PreviousSibling, "Toggle color mode", placement = PopupPlacement.BottomRight)
+            Tooltip(ElementTarget.PreviousSibling, "Toggle color mode $counter", placement = PopupPlacement.BottomRight)
         }
     }
 }

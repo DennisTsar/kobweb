@@ -7,7 +7,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.withIndent
 import com.varabyte.kobweb.common.navigation.RoutePrefix
 import com.varabyte.kobweb.gradle.application.BuildTarget
-import com.varabyte.kobweb.gradle.application.extensions.AppBlock
 import com.varabyte.kobweb.project.conf.Server
 import com.varabyte.kobweb.project.frontend.AppData
 
@@ -256,15 +255,15 @@ fun createMainFunction(
                 )
                 addStatement("renderComposable(rootElementId = \"root\") {")
                 withIndent {
-                    addStatement("$appFqn {")
+                    addStatement("router.renderActivePage { renderWithDeferred { ")
                     withIndent {
-                        if (usingSilkFoundation) {
-                            addStatement("router.renderActivePage { renderWithDeferred { it() } }")
-                        } else {
-                            addStatement("router.renderActivePage()")
-                        }
+                        addStatement("$appFqn { it() }")
+//                        if (usingSilkFoundation) {
+//                        } else {
+//                            addStatement("router.renderActivePage()")
+//                        }
                     }
-                    addStatement("}")
+                    addStatement("} }")
                 }
                 addStatement("}")
             }.build())

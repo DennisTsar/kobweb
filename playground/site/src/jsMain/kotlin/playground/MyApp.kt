@@ -1,15 +1,16 @@
 package playground
 
 import androidx.compose.runtime.*
+import com.varabyte.kobweb.browser.storage.createStorageKey
 import com.varabyte.kobweb.browser.storage.getItem
 import com.varabyte.kobweb.browser.storage.setItem
-import com.varabyte.kobweb.browser.storage.createStorageKey
 import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
 import com.varabyte.kobweb.compose.ui.graphics.Colors
 import com.varabyte.kobweb.compose.ui.modifiers.*
 import com.varabyte.kobweb.core.App
+import com.varabyte.kobweb.core.rememberPageContext
 import com.varabyte.kobweb.silk.SilkApp
 import com.varabyte.kobweb.silk.components.layout.Surface
 import com.varabyte.kobweb.silk.init.InitSilk
@@ -20,6 +21,7 @@ import com.varabyte.kobweb.silk.style.toModifier
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
 import kotlinx.browser.localStorage
 import org.jetbrains.compose.web.css.*
+import playground.components.layouts.PageLayout
 
 private val COLOR_MODE_KEY =
     ColorMode.entries.createStorageKey("playground:app:colorMode", defaultValue = ColorMode.DARK)
@@ -69,7 +71,17 @@ fun AppEntry(content: @Composable () -> Unit) {
         LaunchedEffect(colorMode) { localStorage.setItem(COLOR_MODE_KEY, colorMode) }
 
         Surface(SmoothColorStyle.toModifier().minHeight(100.vh)) {
-            content()
+            val movableContent = remember { movableContentOf(content) }
+            val path = rememberPageContext().route.path
+            when {
+                !path.startsWith("/echo") -> {
+                    PageLayout("hello") { movableContent() }
+                }
+
+                else -> {
+                    movableContent()
+                }
+            }
         }
     }
 }
