@@ -138,7 +138,7 @@ class MutableSilkTheme {
         }
     }
 
-    fun <K : CssKind> replaceStyle(
+    internal fun <K : CssKind> _replaceStyle(
         style: CssStyle<K>,
         extraModifier: @Composable () -> Modifier,
         init: CssStyleTypedScope<K>.() -> Unit
@@ -151,12 +151,52 @@ class MutableSilkTheme {
         updateReplaced(style, newStyle)
     }
 
-    fun <K : CssKind> replaceStyle(
+    fun replaceStyle(
+        style: CssStyle<GeneralKind>,
+        extraModifier: @Composable () -> Modifier,
+        init: CssStyleScope.() -> Unit
+    ) {
+        _replaceStyle(style, extraModifier, init)
+    }
+
+    fun replaceStyle(
+        style: CssStyle<GeneralKind>,
+        extraModifier: Modifier = Modifier,
+        init: CssStyleScope.() -> Unit
+    ) {
+        _replaceStyle(style, { extraModifier }, init)
+    }
+
+    fun replaceStyle(
+        style: CssStyle<RestrictedKind>,
+        extraModifier: @Composable () -> Modifier,
+        init: CssStyleScope.() -> Unit
+    ) {
+        _replaceStyle(style, extraModifier, init)
+    }
+
+    fun replaceStyle(
+        style: CssStyle<RestrictedKind>,
+        extraModifier: Modifier = Modifier,
+        init: CssStyleScope.() -> Unit
+    ) {
+        _replaceStyle(style, { extraModifier }, init)
+    }
+
+    fun <K : ComponentKind> replaceStyle(
+        style: CssStyle<K>,
+        extraModifier: @Composable () -> Modifier,
+        init: CssStyleTypedScope<K>.() -> Unit
+    ) {
+        _replaceStyle(style, extraModifier, init)
+    }
+
+    fun <K : ComponentKind> replaceStyle(
         style: CssStyle<K>,
         extraModifier: Modifier = Modifier,
         init: CssStyleTypedScope<K>.() -> Unit
     ) {
-        replaceStyle(style, { extraModifier }, init)
+        _replaceStyle(style, { extraModifier }, init)
     }
 
     fun registerStyle(style: LegacyComponentStyle) {
@@ -455,15 +495,40 @@ class MutableSilkTheme {
  * }
  * ```
  */
-fun <K : CssKind> MutableSilkTheme.modifyStyle(
-    style: CssStyle<K>,
+fun MutableSilkTheme.modifyStyle(
+    style: CssStyle<GeneralKind>,
     extraModifier: Modifier = Modifier,
-    init: CssStyleTypedScope<K>.() -> Unit
+    init: CssStyleScope.() -> Unit
 ) {
-    modifyStyle(style, { extraModifier }, init)
+    _modifyStyle(style, { extraModifier }, init)
 }
 
-fun <K : CssKind> MutableSilkTheme.modifyStyle(
+fun MutableSilkTheme.modifyStyle(
+    style: CssStyle<GeneralKind>,
+    extraModifier: @Composable () -> Modifier,
+    init: CssStyleScope.() -> Unit
+) {
+    _modifyStyle(style, extraModifier, init)
+}
+
+fun MutableSilkTheme.modifyStyle(
+    style: CssStyle<RestrictedKind>,
+    extraModifier: Modifier = Modifier,
+    init: CssStyleScope.() -> Unit
+) {
+    _modifyStyle(style, { extraModifier }, init)
+}
+
+fun MutableSilkTheme.modifyStyle(
+    style: CssStyle<RestrictedKind>,
+    extraModifier: @Composable () -> Modifier,
+    init: CssStyleScope.() -> Unit
+) {
+    _modifyStyle(style, extraModifier, init)
+}
+
+
+private fun <K : CssKind> MutableSilkTheme._modifyStyle(
     style: CssStyle<K>,
     extraModifier: @Composable () -> Modifier,
     init: CssStyleTypedScope<K>.() -> Unit
@@ -473,7 +538,7 @@ fun <K : CssKind> MutableSilkTheme.modifyStyle(
     val existingExtraModifier = style.extraModifier
     val existingInit = style.init
 
-    replaceStyle(style, {
+    _replaceStyle(style, {
         existingExtraModifier().then(extraModifier())
     }) {
         existingInit.invoke(this)
@@ -494,7 +559,7 @@ fun MutableSilkTheme.modifyStyleBase(
     extraModifier: @Composable () -> Modifier,
     init: CssStyleBaseScope.() -> Modifier
 ) {
-    modifyStyle(style, extraModifier) {
+    _modifyStyle(style, extraModifier) {
         base {
             CssStyleBaseScope(colorMode).let(init)
         }
@@ -553,7 +618,7 @@ fun MutableSilkTheme.replaceStyleBase(
     extraModifier: @Composable () -> Modifier,
     init: CssStyleBaseScope.() -> Modifier
 ) {
-    replaceStyle(style, extraModifier) {
+    _replaceStyle(style, extraModifier) {
         base {
             CssStyleBaseScope(colorMode).let(init)
         }
@@ -680,7 +745,7 @@ fun <K : ComponentKind> MutableSilkTheme.modifyComponentStyle(
     extraModifiers: Modifier = Modifier,
     init: CssStyleScope.() -> Unit
 ) {
-    modifyStyle(style, extraModifiers, init)
+    _modifyStyle(style, { extraModifiers }, init)
 }
 
 @Deprecated("Name simplified to `modifyStyle`", ReplaceWith("modifyStyle(style, extraModifiers, init)"))
@@ -689,7 +754,7 @@ fun <K : ComponentKind> MutableSilkTheme.modifyComponentStyle(
     extraModifiers: @Composable () -> Modifier,
     init: CssStyleScope.() -> Unit
 ) {
-    modifyStyle(style, extraModifiers, init)
+    _modifyStyle(style, extraModifiers, init)
 }
 
 @Deprecated("Name simplified to `modifyStyleBase`", ReplaceWith("modifyStyleBase(style, extraModifiers, init)"))
