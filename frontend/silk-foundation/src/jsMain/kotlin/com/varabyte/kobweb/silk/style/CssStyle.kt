@@ -128,7 +128,7 @@ internal value class ClassSelectors(private val value: List<String>) {
  */
 @Immutable // TODO: Remove when CMP-5680 is fixed
 abstract class CssStyle<K : CssKind> internal constructor(
-    internal val init: CssStyleScope.() -> Unit,
+    internal val init: CssStyleTypedScope<K>.() -> Unit,
     internal val extraModifier: @Composable () -> Modifier = { Modifier },
 ) {
     /**
@@ -215,7 +215,7 @@ abstract class CssStyle<K : CssKind> internal constructor(
     // definitions for the same selector, just combine them together. One way this is useful is you can use
     // `MutableSilkTheme.modifyStyle` to layer additional styles on top of a base style. In almost all
     // practical cases, however, there will only ever be a single selector of each type per component style.
-    private fun CssStyleScope.mergeCssModifiers(init: CssStyleScope.() -> Unit): Map<CssModifier.Key, CssModifier> {
+    private fun CssStyleTypedScope<K>.mergeCssModifiers(init: CssStyleTypedScope<K>.() -> Unit): Map<CssModifier.Key, CssModifier> {
         return apply(init).cssModifiers
             .groupBy { it.key }
             .mapValues { (_, group) ->
@@ -300,9 +300,9 @@ abstract class CssStyle<K : CssKind> internal constructor(
         // searching for all elements tagged with a certain class.
         val classNames = mutableListOf(selector)
 
-        val lightModifiers = CssStyleScope(ColorMode.LIGHT).mergeCssModifiers(init)
+        val lightModifiers = CssStyleTypedScope<K>(ColorMode.LIGHT).mergeCssModifiers(init)
             .assertNoAttributeModifiers(selector, layer)
-        val darkModifiers = CssStyleScope(ColorMode.DARK).mergeCssModifiers(init)
+        val darkModifiers = CssStyleTypedScope<K>(ColorMode.DARK).mergeCssModifiers(init)
             .assertNoAttributeModifiers(selector, layer)
 
         StyleGroup.from(lightModifiers[CssModifier.BaseKey]?.modifier, darkModifiers[CssModifier.BaseKey]?.modifier)
@@ -348,7 +348,7 @@ abstract class CssStyle<K : CssKind> internal constructor(
  */
 internal class SimpleCssStyle(
     val selector: String,
-    init: CssStyleScope.() -> Unit,
+    init: CssStyleTypedScope<*>.() -> Unit,
     extraModifier: @Composable () -> Modifier,
     val layer: String?
 ) : CssStyle<GeneralKind>(init, extraModifier) {
@@ -461,7 +461,13 @@ interface CssStyleScopeBase {
  * }
  * ```
  */
-class CssStyleScope internal constructor(override val colorMode: ColorMode) : CssStyleScopeBase, StyleScope()
+
+// TODO: some docs
+class CssStyleTypedScope<@Suppress("unused") K : CssKind> internal constructor(
+    colorMode: ColorMode
+) : CssStyleScope(colorMode)
+
+sealed class CssStyleScope(override val colorMode: ColorMode) : CssStyleScopeBase, StyleScope()
 
 /**
  * A simplified subset of [CssStyleScope].
@@ -518,12 +524,12 @@ fun CssStyle.Companion.base(
     init: CssStyleBaseScope.() -> Modifier
 ) = object : CssStyle<GeneralKind>(init = { base { CssStyleBaseScope(colorMode).let(init) } }, extraModifier) {}
 
-fun <K : ComponentKind> CssStyle(extraModifier: Modifier = Modifier, init: CssStyleScope.() -> Unit) =
+fun <K : ComponentKind> CssStyle(extraModifier: Modifier = Modifier, init: CssStyleTypedScope<K>.() -> Unit) =
     object : CssStyle<K>(init, { extraModifier }) {}
 
 fun <K : ComponentKind> CssStyle(
     extraModifier: @Composable () -> Modifier,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<K>.() -> Unit,
 ) = object : CssStyle<K>(init, extraModifier) {}
 
 fun <K : ComponentKind> CssStyle.Companion.base(
@@ -631,7 +637,7 @@ fun <K : ComponentKind> CssStyle(
     name: String,
     extraModifier: Modifier = Modifier,
     prefix: String? = null,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<*>.() -> Unit
 ) =
     CssStyle<K>(extraModifier, init)
 
@@ -641,7 +647,7 @@ fun <K : ComponentKind> CssStyle(
     name: String,
     extraModifier: @Composable () -> Modifier,
     prefix: String? = null,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<*>.() -> Unit
 ) = CssStyle<K>(extraModifier, init)
 
 @Suppress("DeprecatedCallableAddReplaceWith", "UNUSED_PARAMETER")
@@ -664,7 +670,10 @@ fun <K : ComponentKind> CssStyle.Companion.base(
 
 @Composable
 @Suppress("DeprecatedCallableAddReplaceWith", "UNUSED_PARAMETER")
-@Deprecated("You are likely seeing this after a migration to use `CssStyle`. It seems like you were intentionally using the `ComponentStyle` / `ComponentVariant` pattern, which now requires specifying a `ComponentKind` interface. Please see https://github.com/varabyte/kobweb/blob/main/docs/css-style.md#converting-a-legacy-componentstyle-into-a-cssstyle for more guidance.", level = DeprecationLevel.ERROR)
+@Deprecated(
+    "You are likely seeing this after a migration to use `CssStyle`. It seems like you were intentionally using the `ComponentStyle` / `ComponentVariant` pattern, which now requires specifying a `ComponentKind` interface. Please see https://github.com/varabyte/kobweb/blob/main/docs/css-style.md#converting-a-legacy-componentstyle-into-a-cssstyle for more guidance.",
+    level = DeprecationLevel.ERROR
+)
 fun CssStyle<GeneralKind>.toModifier(first: ComponentVariant?, vararg rest: ComponentVariant?): Modifier =
     this.toModifier()
 

@@ -38,7 +38,7 @@ internal open class SimpleCssStyleVariant<K : ComponentKind>(
     val baseStyle: CssStyle<K>
 ) : CssStyleVariant<K>() {
     constructor(
-        init: CssStyleScope.() -> Unit,
+        init: CssStyleTypedScope<K>.() -> Unit,
         extraModifier: @Composable () -> Modifier,
         baseStyle: CssStyle<K>
     )
@@ -57,7 +57,7 @@ private class CompositeCssStyleVariant<K : ComponentKind>(
 }
 
 internal class ExtendingCssStyleVariant<K : ComponentKind>(
-    init: CssStyleScope.() -> Unit,
+    init: CssStyleTypedScope<K>.() -> Unit,
     extraModifier: @Composable () -> Modifier,
     internal val baseVariant: SimpleCssStyleVariant<K>
 ) : SimpleCssStyleVariant<K>(init, { extraModifier().then(baseVariant.toModifier()) }, baseVariant.baseStyle)
@@ -104,14 +104,14 @@ fun <K : ComponentKind> Iterable<CssStyleVariant<K>?>.combine(): CssStyleVariant
 
 fun <K : ComponentKind> CssStyle<K>.addVariant(
     extraModifier: Modifier = Modifier,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<K>.() -> Unit
 ): CssStyleVariant<K> {
     return addVariant({ extraModifier }, init)
 }
 
 fun <K : ComponentKind> CssStyle<K>.addVariant(
     extraModifier: @Composable () -> Modifier,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<K>.() -> Unit
 ): CssStyleVariant<K> {
     return SimpleCssStyleVariant(
         object : CssStyle<K>(init, extraModifier) {},
@@ -144,13 +144,13 @@ fun <K : ComponentKind> CssStyle<K>.addVariantBase(
 
 fun <K : ComponentKind> CssStyleVariant<K>.extendedBy(
     extraModifier: Modifier = Modifier,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<K>.() -> Unit
 ) =
     extendedBy({ extraModifier }, init)
 
 fun <K : ComponentKind> CssStyleVariant<K>.extendedBy(
     extraModifier: @Composable () -> Modifier,
-    init: CssStyleScope.() -> Unit
+    init: CssStyleTypedScope<K>.() -> Unit
 ): CssStyleVariant<K> = ExtendingCssStyleVariant(init, extraModifier, this as SimpleCssStyleVariant<K>)
 
 fun <K : ComponentKind> CssStyleVariant<K>.extendedByBase(
