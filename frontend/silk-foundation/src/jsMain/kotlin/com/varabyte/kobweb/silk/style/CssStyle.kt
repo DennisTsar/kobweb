@@ -128,7 +128,7 @@ internal value class ClassSelectors(private val value: List<String>) {
  */
 @Immutable // TODO: Remove when CMP-5680 is fixed
 abstract class CssStyle<K : CssKind> internal constructor(
-    internal val init: CssStyleTypedScope<K>.() -> Unit,
+    internal val init: CssStyleTypedScope<Nothing>.() -> Unit,
     internal val extraModifier: @Composable () -> Modifier = { Modifier },
 ) {
     /**
@@ -215,7 +215,7 @@ abstract class CssStyle<K : CssKind> internal constructor(
     // definitions for the same selector, just combine them together. One way this is useful is you can use
     // `MutableSilkTheme.modifyStyle` to layer additional styles on top of a base style. In almost all
     // practical cases, however, there will only ever be a single selector of each type per component style.
-    private fun CssStyleTypedScope<K>.mergeCssModifiers(init: CssStyleTypedScope<K>.() -> Unit): Map<CssModifier.Key, CssModifier> {
+    private fun CssStyleTypedScope<Nothing>.mergeCssModifiers(init: CssStyleTypedScope<Nothing>.() -> Unit): Map<CssModifier.Key, CssModifier> {
         return apply(init).cssModifiers
             .groupBy { it.key }
             .mapValues { (_, group) ->
@@ -300,9 +300,9 @@ abstract class CssStyle<K : CssKind> internal constructor(
         // searching for all elements tagged with a certain class.
         val classNames = mutableListOf(selector)
 
-        val lightModifiers = CssStyleTypedScope<K>(ColorMode.LIGHT).mergeCssModifiers(init)
+        val lightModifiers = CssStyleTypedScope<Nothing>(ColorMode.LIGHT).mergeCssModifiers(init)
             .assertNoAttributeModifiers(selector, layer)
-        val darkModifiers = CssStyleTypedScope<K>(ColorMode.DARK).mergeCssModifiers(init)
+        val darkModifiers = CssStyleTypedScope<Nothing>(ColorMode.DARK).mergeCssModifiers(init)
             .assertNoAttributeModifiers(selector, layer)
 
         StyleGroup.from(lightModifiers[CssModifier.BaseKey]?.modifier, darkModifiers[CssModifier.BaseKey]?.modifier)
@@ -463,7 +463,7 @@ interface CssStyleScopeBase {
  */
 
 // TODO: some docs
-class CssStyleTypedScope<@Suppress("unused") K : CssKind> internal constructor(
+class CssStyleTypedScope<@Suppress("unused") out K : ComponentKind> internal constructor(
     colorMode: ColorMode
 ) : CssStyleScope(colorMode)
 

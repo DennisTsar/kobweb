@@ -141,7 +141,7 @@ class MutableSilkTheme {
     internal fun <K : CssKind> _replaceStyle(
         style: CssStyle<K>,
         extraModifier: @Composable () -> Modifier,
-        init: CssStyleTypedScope<K>.() -> Unit
+        init: CssStyleTypedScope<Nothing>.() -> Unit
     ) {
         val name = cssStyleNames[style] ?: error("Attempting to replace a CSS style that was never registered.")
         check(!replacedCssStyles.contains(style)) { "Attempting to override style \"${name}\" twice" }
@@ -531,7 +531,7 @@ fun MutableSilkTheme.modifyStyle(
 private fun <K : CssKind> MutableSilkTheme._modifyStyle(
     style: CssStyle<K>,
     extraModifier: @Composable () -> Modifier,
-    init: CssStyleTypedScope<K>.() -> Unit
+    init: CssStyleTypedScope<Nothing>.() -> Unit
 ) {
     val styleName = cssStyleNames[style] ?: error("Attempting to modify a style that was never registered.")
     check(cssStyles.contains(styleName)) { "Attempting to modify a style that was never registered: \"${styleName}\"" }
@@ -928,7 +928,7 @@ fun <K : ComponentKind> MutableSilkTheme.modifyVariant(
         cssStyleNames[variant.cssStyle] ?: error("Attempting to modify a variant that was never registered.")
     check(cssStyleVariants.contains(variantName)) { "Attempting to modify a style that was never registered: \"${variantName}\"" }
     val existingExtraModifier = variant.cssStyle.extraModifier
-    val existingInit = variant.cssStyle.init
+    val existingInit = variant.cssStyle.init as CssStyleTypedScope<K>.() -> Unit
 
     replaceVariant(variant, {
         existingExtraModifier().then(extraModifier())
