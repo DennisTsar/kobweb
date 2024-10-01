@@ -12,6 +12,11 @@ plugins {
 group = "playground"
 version = "1.0-SNAPSHOT"
 
+composeCompiler {
+    includeSourceInformation = false
+    includeTraceMarkers = false
+}
+
 kobweb {
     markdown {
         imports.add(".components.widgets.*")
