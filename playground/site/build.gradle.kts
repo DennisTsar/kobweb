@@ -7,7 +7,8 @@ plugins {
     id("com.varabyte.kobweb.application")
     id("com.varabyte.kobwebx.markdown")
     alias(libs.plugins.kotlinx.serialization)
-    id("org.jetbrains.kotlinx.rpc.plugin") version "0.2.4"
+    id("org.jetbrains.kotlinx.rpc.platform") version "0.3.0" // with this breaks at runtime
+    id("org.jetbrains.kotlinx.rpc.plugin") version "0.3.0" // neede but breaks at compile time
 }
 
 group = "playground"

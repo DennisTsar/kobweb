@@ -12,10 +12,10 @@ import com.varabyte.kobweb.silk.components.forms.TextInput
 import com.varabyte.kobweb.silk.components.layout.HorizontalDivider
 import com.varabyte.kobweb.streams.ApiStream
 import kotlinx.coroutines.launch
-import kotlinx.rpc.client.awaitFieldInitialization
-import kotlinx.rpc.client.withService
-import kotlinx.rpc.rpcClientConfig
-import kotlinx.rpc.serialization.json
+import kotlinx.rpc.awaitFieldInitialization
+import kotlinx.rpc.krpc.rpcClientConfig
+import kotlinx.rpc.krpc.serialization.json.json
+import kotlinx.rpc.withService
 import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.dom.P
 import org.jetbrains.compose.web.dom.Text

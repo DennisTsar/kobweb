@@ -1,9 +1,9 @@
 package playground
 
 import androidx.compose.runtime.*
+import com.varabyte.kobweb.browser.storage.createStorageKey
 import com.varabyte.kobweb.browser.storage.getItem
 import com.varabyte.kobweb.browser.storage.setItem
-import com.varabyte.kobweb.browser.storage.createStorageKey
 import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
@@ -26,10 +26,10 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.rpc.RPCConfig
-import kotlinx.rpc.RPCTransport
-import kotlinx.rpc.RPCTransportMessage
-import kotlinx.rpc.client.KRPCClient
+import kotlinx.rpc.krpc.RPCConfig
+import kotlinx.rpc.krpc.RPCTransport
+import kotlinx.rpc.krpc.RPCTransportMessage
+import kotlinx.rpc.krpc.client.KRPCClient
 import org.jetbrains.compose.web.css.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
