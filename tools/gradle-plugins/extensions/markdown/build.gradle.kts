@@ -1,6 +1,7 @@
 plugins {
     `kotlin-dsl`
     id("com.varabyte.kobweb.internal.publish")
+    id("dokka-convention")
 }
 
 group = "com.varabyte.kobwebx.gradle"

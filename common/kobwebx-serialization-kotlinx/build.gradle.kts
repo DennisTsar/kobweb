@@ -3,6 +3,7 @@ import com.varabyte.kobweb.gradle.publish.setForMultiplatform
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     id("com.varabyte.kobweb.internal.publish")
+    id("dokka-convention")
 }
 
 group = "com.varabyte.kobwebx"

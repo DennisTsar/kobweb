@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.compiler)
     id("com.varabyte.kobweb.internal.publish")
+    id("dokka-convention")
 }
 
 group = "com.varabyte.kobwebx"

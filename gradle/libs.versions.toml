@@ -2,6 +2,7 @@
 playwright = "1.45.1"
 commonmark = "0.21.0"
 compose = "1.6.11"
+dokka = "2.0.0-Beta"
 jsoup = "1.16.2"
 kaml = "0.60.0"
 kobweb-libs = "0.19.3-SNAPSHOT"
@@ -24,9 +25,11 @@ commonmark-tables = { module = "org.commonmark:commonmark-ext-gfm-tables", versi
 commonmark-tasklist = { module = "org.commonmark:commonmark-ext-task-list-items", version.ref = "commonmark" }
 compose-html-core = { module = "org.jetbrains.compose.html:html-core", version.ref = "compose" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose" }
+dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 kaml = { module = "com.charleskorn.kaml:kaml", version.ref = "kaml" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-html = { module = "org.jetbrains.kotlinx:kotlinx-html", version.ref = "kotlinx-html" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
@@ -72,7 +75,9 @@ ktor = [
 
 [plugins]
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+# Versions are not declared as `kotlin-gradle-plugin` dependency is used in `buildSrc` instead
+# see `buildSrc/build.gradle.kts` for more details
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

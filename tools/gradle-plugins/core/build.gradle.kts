@@ -3,6 +3,7 @@ import java.util.*
 plugins {
     `kotlin-dsl`
     id("com.varabyte.kobweb.internal.publish")
+    id("dokka-convention")
     alias(libs.plugins.kotlinx.serialization)
 }
 

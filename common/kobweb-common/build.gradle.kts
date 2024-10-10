@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlinx.serialization)
     id("com.varabyte.kobweb.internal.publish")
+    id("dokka-convention")
 }
 
 group = "com.varabyte.kobweb"
