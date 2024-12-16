@@ -9,10 +9,12 @@ import com.varabyte.kobweb.compose.foundation.layout.BoxScope
 import com.varabyte.kobweb.compose.ui.Alignment
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.modifiers.*
+import com.varabyte.kobweb.compose.ui.thenIf
 import com.varabyte.kobweb.silk.init.setSilkWidgetVariables
 import com.varabyte.kobweb.silk.style.ComponentKind
 import com.varabyte.kobweb.silk.style.CssStyle
 import com.varabyte.kobweb.silk.style.CssStyleVariant
+import com.varabyte.kobweb.silk.style.LocalColorModeOverridden
 import com.varabyte.kobweb.silk.style.toModifier
 import com.varabyte.kobweb.silk.style.vars.color.BackgroundColorVar
 import com.varabyte.kobweb.silk.style.vars.color.ColorVar
@@ -55,9 +57,11 @@ fun Surface(
     ref: ElementRefScope<HTMLElement>? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
-    var surfaceElement by remember { mutableStateOf<HTMLElement?>(null)}
+    var surfaceElement by remember { mutableStateOf<HTMLElement?>(null) }
     Box(
-        SurfaceStyle.toModifier(variant).then(modifier),
+        SurfaceStyle.toModifier(variant).then(modifier).thenIf(colorModeOverride != null) {
+            Modifier.classNames(if (colorModeOverride!!.isLight) "silk-light" else "silk-dark")
+        },
         contentAlignment = contentAlignment,
         ref = refScope {
             add(ref)
@@ -66,7 +70,7 @@ fun Surface(
     ) {
         if (colorModeOverride != null) {
             surfaceElement?.let { surfaceElement ->
-                CompositionLocalProvider(colorModeOverride.provide()) {
+                CompositionLocalProvider(colorModeOverride.provide(), LocalColorModeOverridden provides true) {
                     val currColorMode = ColorMode.current // Can recompose if child changes ColorMode.currentState
                     LaunchedEffect(currColorMode) { surfaceElement.setSilkWidgetVariables(currColorMode) }
                     content()

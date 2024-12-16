@@ -16,6 +16,10 @@ import org.jetbrains.compose.web.attributes.AttrsScope
 import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.css.StyleScope as JbStyleScope
 
+// Ideally this would be `internal` but is used by `Surface` when overriding the color mode
+// Perhaps this module should instead provide a `ColorModeOverride` composable that Surface can use?
+val LocalColorModeOverridden = compositionLocalOf { false }
+
 /**
  * A base interface for all [CssStyle] types.
  *
@@ -197,13 +201,17 @@ abstract class CssStyle<K : CssKind> internal constructor(
         group: StyleGroup,
         handler: (String, ComparableStyleScope) -> Unit
     ) {
+        // HACK: we need to special case `.silk-colors`, since it gets applied at the same level as `.silk-light/dark`
+        // Potentially the roles of `silk-colors` and `silk-light/dark` could be merged?
+        val lightPrefix = if (selectorBaseName != ".silk-colors") ".silk-light " else ""
+        val darkPrefix = if (selectorBaseName != ".silk-colors") ".silk-dark " else ""
         when (group) {
-            is StyleGroup.Light -> handler(selectorBaseName.suffixedWith(ColorMode.LIGHT), group.styles)
-            is StyleGroup.Dark -> handler(selectorBaseName.suffixedWith(ColorMode.DARK), group.styles)
+            is StyleGroup.Light -> handler(lightPrefix + selectorBaseName.suffixedWith(ColorMode.LIGHT), group.styles)
+            is StyleGroup.Dark -> handler(darkPrefix + selectorBaseName.suffixedWith(ColorMode.DARK), group.styles)
             is StyleGroup.ColorAgnostic -> handler(selectorBaseName, group.styles)
             is StyleGroup.ColorAware -> {
-                handler(selectorBaseName.suffixedWith(ColorMode.LIGHT), group.lightStyles)
-                handler(selectorBaseName.suffixedWith(ColorMode.DARK), group.darkStyles)
+                handler(lightPrefix + selectorBaseName.suffixedWith(ColorMode.LIGHT), group.lightStyles)
+                handler(darkPrefix + selectorBaseName.suffixedWith(ColorMode.DARK), group.darkStyles)
             }
         }
     }
@@ -306,7 +314,8 @@ abstract class CssStyle<K : CssKind> internal constructor(
             ?.let { group ->
                 withFinalSelectorName(selector, group) { name, styles ->
                     if (styles.isNotEmpty()) {
-                        classNames.add(name)
+                        // HACK to accommodate `.silk-light/dark` prefix
+                        classNames.add(name.substringAfter(' '))
                         styleSheet.layerOrInPlace(layer) {
                             addStyles(name, styles)
                         }
@@ -320,7 +329,8 @@ abstract class CssStyle<K : CssKind> internal constructor(
                 ?: continue
             withFinalSelectorName(selector, group) { name, styles ->
                 if (styles.isNotEmpty()) {
-                    classNames.add(name)
+                    // HACK to accommodate `.silk-light/dark` prefix
+                    classNames.add(name.substringAfter(' '))
 
                     val cssRule = "$name${cssRuleKey.suffix.orEmpty()}"
                     styleSheet.mediaOrInPlace(cssRuleKey.mediaQuery) {
@@ -402,6 +412,9 @@ internal class ImmutableCssStyle(
 
     @Composable
     fun toModifier(): Modifier {
+        if (!LocalColorModeOverridden.current) {
+            return Modifier.classNames(*classNames.toTypedArray()).then(extraModifier())
+        }
         val currentClassNames = classNames.filterNot { it.endsWith(ColorMode.current.opposite.name.lowercase()) }
         return (if (currentClassNames.isNotEmpty()) Modifier.classNames(*currentClassNames.toTypedArray()) else Modifier)
             .then(extraModifier())
