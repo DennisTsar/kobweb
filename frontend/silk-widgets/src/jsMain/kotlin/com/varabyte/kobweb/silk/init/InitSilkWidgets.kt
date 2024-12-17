@@ -1,7 +1,6 @@
 package com.varabyte.kobweb.silk.init
 
 import androidx.compose.runtime.*
-import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Colors
 import com.varabyte.kobweb.compose.ui.graphics.lightened
@@ -96,7 +95,6 @@ import com.varabyte.kobweb.silk.theme.colors.suffixedWith
 import com.varabyte.kobweb.silk.theme.name
 import kotlinx.browser.document
 import kotlinx.dom.addClass
-import kotlinx.dom.removeClass
 import org.w3c.dom.Document
 import org.w3c.dom.HTMLElement
 
@@ -329,8 +327,6 @@ fun initSilkWidgets(ctx: InitSilkContext) {
 val SilkColorsStyle = CssStyle.base {
     val palette = colorMode.toPalette()
     Modifier
-        .colorScheme(if (colorMode.isLight) ColorScheme.Light else ColorScheme.Dark)
-
         // region General color vars
         .setVariable(BackgroundColorVar, palette.background)
         .setVariable(ColorVar, palette.color)
@@ -386,7 +382,7 @@ fun SilkWidgetVariables(provideElement: () -> HTMLElement) {
  */
 @Composable
 fun SilkWidgetVariables() {
-    SilkWidgetVariables { document.documentElement as HTMLElement }
+    SilkWidgetVariables { document.getElementById("root") as HTMLElement }
 }
 
 /**
@@ -420,7 +416,7 @@ fun HTMLElement.setSilkWidgetVariables() {
 
 fun HTMLElement.setSilkWidgetVariables(colorMode: ColorMode) {
     SilkColorsStyle.name.let { silkColorsStyleName ->
-        removeClass(silkColorsStyleName.suffixedWith(colorMode.opposite))
+        addClass(silkColorsStyleName.suffixedWith(colorMode.opposite))
         addClass(silkColorsStyleName.suffixedWith(colorMode))
     }
 }

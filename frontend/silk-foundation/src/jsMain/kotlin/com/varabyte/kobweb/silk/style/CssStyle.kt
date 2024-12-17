@@ -6,6 +6,8 @@ import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.modifiers.*
 import com.varabyte.kobweb.compose.ui.toAttrs
 import com.varabyte.kobweb.compose.ui.toStyles
+import com.varabyte.kobweb.silk.SILK_DARK_SELECTOR
+import com.varabyte.kobweb.silk.SILK_LIGHT_SELECTOR
 import com.varabyte.kobweb.silk.style.animation.Keyframes
 import com.varabyte.kobweb.silk.style.animation.toAnimation
 import com.varabyte.kobweb.silk.style.layer.SilkLayer
@@ -201,17 +203,18 @@ abstract class CssStyle<K : CssKind> internal constructor(
         group: StyleGroup,
         handler: (String, ComparableStyleScope) -> Unit
     ) {
-        // HACK: we need to special case `.silk-colors`, since it gets applied at the same level as `.silk-light/dark`
-        // Potentially the roles of `silk-colors` and `silk-light/dark` could be merged?
-        val lightPrefix = if (selectorBaseName != ".silk-colors") ".silk-light " else ""
-        val darkPrefix = if (selectorBaseName != ".silk-colors") ".silk-dark " else ""
+        // Include both descendants and siblings of `.silk-light/dark` classes
+        val lightSelector = "$SILK_LIGHT_SELECTOR ${selectorBaseName.suffixedWith(ColorMode.LIGHT)}, " +
+            "$SILK_LIGHT_SELECTOR${selectorBaseName.suffixedWith(ColorMode.LIGHT)}"
+        val darkSelector = "$SILK_DARK_SELECTOR ${selectorBaseName.suffixedWith(ColorMode.DARK)}, " +
+            "$SILK_DARK_SELECTOR${selectorBaseName.suffixedWith(ColorMode.DARK)}"
         when (group) {
-            is StyleGroup.Light -> handler(lightPrefix + selectorBaseName.suffixedWith(ColorMode.LIGHT), group.styles)
-            is StyleGroup.Dark -> handler(darkPrefix + selectorBaseName.suffixedWith(ColorMode.DARK), group.styles)
+            is StyleGroup.Light -> handler(lightSelector, group.styles)
+            is StyleGroup.Dark -> handler(darkSelector, group.styles)
             is StyleGroup.ColorAgnostic -> handler(selectorBaseName, group.styles)
             is StyleGroup.ColorAware -> {
-                handler(lightPrefix + selectorBaseName.suffixedWith(ColorMode.LIGHT), group.lightStyles)
-                handler(darkPrefix + selectorBaseName.suffixedWith(ColorMode.DARK), group.darkStyles)
+                handler(lightSelector, group.lightStyles)
+                handler(darkSelector, group.darkStyles)
             }
         }
     }
@@ -315,7 +318,7 @@ abstract class CssStyle<K : CssKind> internal constructor(
                 withFinalSelectorName(selector, group) { name, styles ->
                     if (styles.isNotEmpty()) {
                         // HACK to accommodate `.silk-light/dark` prefix
-                        classNames.add(name.substringAfter(' '))
+                        classNames.add(name.substringAfter(' ').substringBefore(','))
                         styleSheet.layerOrInPlace(layer) {
                             addStyles(name, styles)
                         }
@@ -330,7 +333,7 @@ abstract class CssStyle<K : CssKind> internal constructor(
             withFinalSelectorName(selector, group) { name, styles ->
                 if (styles.isNotEmpty()) {
                     // HACK to accommodate `.silk-light/dark` prefix
-                    classNames.add(name.substringAfter(' '))
+                    classNames.add(name.substringAfter(' ').substringBefore(','))
 
                     val cssRule = "$name${cssRuleKey.suffix.orEmpty()}"
                     styleSheet.mediaOrInPlace(cssRuleKey.mediaQuery) {
