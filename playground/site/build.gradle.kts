@@ -1,5 +1,7 @@
 import com.varabyte.kobweb.gradle.application.util.configAsKobwebApplication
 import com.varabyte.kobwebx.gradle.markdown.handlers.SilkCalloutBlockquoteHandler
+import kotlinx.html.script
+import kotlinx.html.unsafe
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -13,6 +15,21 @@ group = "playground"
 version = "1.0-SNAPSHOT"
 
 kobweb {
+    app.index.head.add {
+        script {
+            unsafe {
+                raw(
+                    """
+                    if(localStorage.getItem('playground:app:colorMode') === 'LIGHT') {
+                        document.documentElement.classList.replace('silk-dark', 'silk-light');
+                    } else {
+                        document.documentElement.classList.replace('silk-light', 'silk-dark');
+                    }
+                """.trimIndent()
+                )
+            }
+        }
+    }
     markdown {
         imports.add(".components.widgets.*")
         process.set { markdownEntries ->
