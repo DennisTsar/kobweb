@@ -11,12 +11,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.rpc.krpc.RPCConfig
-import kotlinx.rpc.krpc.RPCTransport
-import kotlinx.rpc.krpc.RPCTransportMessage
+import kotlinx.rpc.krpc.KrpcConfig
+import kotlinx.rpc.krpc.KrpcTransport
+import kotlinx.rpc.krpc.KrpcTransportMessage
 import kotlinx.rpc.krpc.rpcServerConfig
 import kotlinx.rpc.krpc.serialization.json.json
-import kotlinx.rpc.krpc.server.KRPCServer
+import kotlinx.rpc.krpc.server.KrpcServer
 import kotlinx.rpc.registerService
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -45,7 +45,7 @@ class MyCustomStream() : ApiStream() {
 val x = MyCustomStream()
 
 @OptIn(InternalCoroutinesApi::class, DelicateCoroutinesApi::class)
-class WebSocketTransport(private val stream: MyCustomStream) : RPCTransport {
+class WebSocketTransport(private val stream: MyCustomStream) : KrpcTransport {
     // Transport job should always be cancelled and never closed
     private val transportJob = Job()
 
@@ -59,24 +59,24 @@ class WebSocketTransport(private val stream: MyCustomStream) : RPCTransport {
 //        }
     }
 
-    override suspend fun send(message: RPCTransportMessage) {
+    override suspend fun send(message: KrpcTransportMessage) {
         when (message) {
-            is RPCTransportMessage.StringMessage -> {
+            is KrpcTransportMessage.StringMessage -> {
                 stream.logger.warn("sending back ${message.value}")
                 stream.stream.send(message.value)
             }
 
-            is RPCTransportMessage.BinaryMessage -> {
+            is KrpcTransportMessage.BinaryMessage -> {
                 stream.stream.send(message.value.toString()) // TODO: this is wrong
             }
         }
     }
 
-    override suspend fun receive(): RPCTransportMessage {
+    override suspend fun receive(): KrpcTransportMessage {
         return suspendCoroutine { continuation ->
             stream.onTextReceived = { messageEvent ->
                 stream.logger.warn("i also recieved $messageEvent")
-                continuation.resume(RPCTransportMessage.StringMessage(messageEvent))
+                continuation.resume(KrpcTransportMessage.StringMessage(messageEvent))
             }
         }
     }
@@ -84,8 +84,8 @@ class WebSocketTransport(private val stream: MyCustomStream) : RPCTransport {
 
 internal class WsRPCServer(
     webSocket: MyCustomStream,
-    config: RPCConfig.Server,
-) : KRPCServer(config, WebSocketTransport(webSocket))
+    config: KrpcConfig.Server,
+) : KrpcServer(config, WebSocketTransport(webSocket))
 
 @InitApi
 fun initTest1(ctx: InitApiContext) {
@@ -100,7 +100,10 @@ fun initTest1(ctx: InitApiContext) {
 
 class MyServiceImpl(override val coroutineContext: CoroutineContext) : MyService {
     private val _myFlow = MutableStateFlow(Random.nextInt().toString())
-    override val keyFlow = _myFlow
+//    override fun keyFlow(): Flow<String> {
+//        return _myFlow
+//    }
+
     override suspend fun sayHello(firstName: String, lastName: String, age: Int): String {
         return "Hello, $firstName $lastName (age $age)"
     }

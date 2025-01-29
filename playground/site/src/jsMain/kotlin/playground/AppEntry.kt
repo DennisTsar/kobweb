@@ -1,9 +1,6 @@
 package playground
 
 import androidx.compose.runtime.*
-import com.varabyte.kobweb.browser.storage.createStorageKey
-import com.varabyte.kobweb.browser.storage.getItem
-import com.varabyte.kobweb.browser.storage.setItem
 import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
@@ -18,21 +15,20 @@ import com.varabyte.kobweb.silk.init.registerStyleBase
 import com.varabyte.kobweb.silk.style.common.SmoothColorStyle
 import com.varabyte.kobweb.silk.style.toModifier
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
+import com.varabyte.kobweb.silk.theme.colors.loadFromLocalStorage
+import com.varabyte.kobweb.silk.theme.colors.saveToLocalStorage
+import com.varabyte.kobweb.silk.theme.colors.systemPreference
 import com.varabyte.kobweb.streams.ApiStream
 import com.varabyte.kobweb.streams.ApiStreamListener
-import kotlinx.browser.localStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.rpc.krpc.RPCConfig
-import kotlinx.rpc.krpc.RPCTransport
-import kotlinx.rpc.krpc.RPCTransportMessage
-import kotlinx.rpc.krpc.client.KRPCClient
-import com.varabyte.kobweb.silk.theme.colors.loadFromLocalStorage
-import com.varabyte.kobweb.silk.theme.colors.saveToLocalStorage
-import com.varabyte.kobweb.silk.theme.colors.systemPreference
+import kotlinx.rpc.krpc.KrpcConfig
+import kotlinx.rpc.krpc.KrpcTransport
+import kotlinx.rpc.krpc.KrpcTransportMessage
+import kotlinx.rpc.krpc.client.KrpcClient
 import org.jetbrains.compose.web.css.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -151,7 +147,7 @@ fun AppEntry(content: @Composable () -> Unit) {
 //) : KRPCClient(config, WebSocketTransport(webSocket))
 
 @OptIn(InternalCoroutinesApi::class, DelicateCoroutinesApi::class)
-class ApiStreamTransport(private val webSocket: ApiStream) : RPCTransport {
+class ApiStreamTransport(private val webSocket: ApiStream) : KrpcTransport {
     // Transport job should always be cancelled and never closed
     private val transportJob = Job()
 
@@ -176,22 +172,22 @@ class ApiStreamTransport(private val webSocket: ApiStream) : RPCTransport {
         }
     }
 
-    override suspend fun send(message: RPCTransportMessage) {
+    override suspend fun send(message: KrpcTransportMessage) {
         when (message) {
-            is RPCTransportMessage.StringMessage -> {
+            is KrpcTransportMessage.StringMessage -> {
                 webSocket.send(message.value)
             }
 
-            is RPCTransportMessage.BinaryMessage -> {
+            is KrpcTransportMessage.BinaryMessage -> {
                 webSocket.send(message.value.toString()) // TODO: this is wrong
             }
         }
     }
 
-    override suspend fun receive(): RPCTransportMessage {
+    override suspend fun receive(): KrpcTransportMessage {
         return suspendCoroutine { continuation ->
             myStreamListener.onTextReceived = { messageEvent ->
-                continuation.resume(RPCTransportMessage.StringMessage(messageEvent))
+                continuation.resume(KrpcTransportMessage.StringMessage(messageEvent))
             }
         }
     }
@@ -199,5 +195,5 @@ class ApiStreamTransport(private val webSocket: ApiStream) : RPCTransport {
 
 internal class ApiStreamRPCClient(
     webSocket: ApiStream,
-    config: RPCConfig.Client,
-) : KRPCClient(config, ApiStreamTransport(webSocket))
+    config: KrpcConfig.Client,
+) : KrpcClient(config, ApiStreamTransport(webSocket))

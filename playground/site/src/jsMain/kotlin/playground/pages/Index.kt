@@ -12,7 +12,6 @@ import com.varabyte.kobweb.silk.components.forms.TextInput
 import com.varabyte.kobweb.silk.components.layout.HorizontalDivider
 import com.varabyte.kobweb.streams.ApiStream
 import kotlinx.coroutines.launch
-import kotlinx.rpc.awaitFieldInitialization
 import kotlinx.rpc.krpc.rpcClientConfig
 import kotlinx.rpc.krpc.serialization.json.json
 import kotlinx.rpc.withService
@@ -35,14 +34,7 @@ fun HomePage() {
             })
         }
         val rpcService = remember { rpcClient.withService<MyService>() }
-        var flowInitialized by remember { mutableStateOf(false) }
         val coroutineScope = rememberCoroutineScope()
-        LaunchedEffect(Unit) {
-            launch {
-                rpcService.awaitFieldInitialization { keyFlow }
-                flowInitialized = true
-            }
-        }
 
         Text("Please enter your name")
         var name by remember { mutableStateOf("") }
@@ -51,6 +43,7 @@ fun HomePage() {
             TextInput(name, onTextChange = { name = it })
             Button(onClick = {
                 coroutineScope.launch {
+                    println("definitely doing stuff")
                     serverHello = rpcService.sayHello(name, "Smith", 11)
                 }
             }) { Text("Say Hello") }
@@ -58,9 +51,7 @@ fun HomePage() {
         Text("Server says: $serverHello")
         P()
         HorizontalDivider(Modifier.width(200.px))
-        if (flowInitialized) {
-            val key by rpcService.keyFlow.collectAsState()
-            Text("Text from server: $key")
-        }
+//        val key by rpcService.keyFlow().collectAsState("not initialized")
+//        Text("Text from server: $key")
     }
 }

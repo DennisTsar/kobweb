@@ -1,9 +1,8 @@
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.rpc.RPC
-import kotlinx.rpc.RPCEagerField
+import kotlinx.rpc.RemoteService
+import kotlinx.rpc.annotations.Rpc
 
-interface MyService : RPC {
-    @RPCEagerField
-    val keyFlow: StateFlow<String>
+@Rpc
+interface MyService : RemoteService {
+    //    fun keyFlow(): Flow<String>
     suspend fun sayHello(firstName: String, lastName: String, age: Int): String
 }
