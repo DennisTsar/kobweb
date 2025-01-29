@@ -9,6 +9,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.rpc.krpc.KrpcConfig
@@ -100,9 +101,7 @@ fun initTest1(ctx: InitApiContext) {
 
 class MyServiceImpl(override val coroutineContext: CoroutineContext) : MyService {
     private val _myFlow = MutableStateFlow(Random.nextInt().toString())
-//    override fun keyFlow(): Flow<String> {
-//        return _myFlow
-//    }
+    override suspend fun keyFlow(): Flow<String> = _myFlow
 
     override suspend fun sayHello(firstName: String, lastName: String, age: Int): String {
         return "Hello, $firstName $lastName (age $age)"

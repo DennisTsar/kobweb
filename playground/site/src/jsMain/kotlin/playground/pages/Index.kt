@@ -11,9 +11,11 @@ import com.varabyte.kobweb.silk.components.forms.Button
 import com.varabyte.kobweb.silk.components.forms.TextInput
 import com.varabyte.kobweb.silk.components.layout.HorizontalDivider
 import com.varabyte.kobweb.streams.ApiStream
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.rpc.krpc.rpcClientConfig
 import kotlinx.rpc.krpc.serialization.json.json
+import kotlinx.rpc.krpc.streamScoped
 import kotlinx.rpc.withService
 import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.dom.P
@@ -36,6 +38,16 @@ fun HomePage() {
         val rpcService = remember { rpcClient.withService<MyService>() }
         val coroutineScope = rememberCoroutineScope()
 
+        val flow = remember { MutableStateFlow("no initialized") }
+        LaunchedEffect(Unit) {
+            streamScoped {
+                rpcService.keyFlow()
+                    .collect {
+                        flow.value = it
+                    }
+            }
+        }
+
         Text("Please enter your name")
         var name by remember { mutableStateOf("") }
         var serverHello by remember { mutableStateOf("") }
@@ -51,7 +63,7 @@ fun HomePage() {
         Text("Server says: $serverHello")
         P()
         HorizontalDivider(Modifier.width(200.px))
-//        val key by rpcService.keyFlow().collectAsState("not initialized")
-//        Text("Text from server: $key")
+        val key by flow.collectAsState()
+        Text("Text from server: $key")
     }
 }
