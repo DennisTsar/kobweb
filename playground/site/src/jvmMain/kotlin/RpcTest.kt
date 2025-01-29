@@ -104,7 +104,7 @@ class MyServiceImpl(override val coroutineContext: CoroutineContext) : MyService
     override suspend fun keyFlow(): Flow<String> = _myFlow
 
     override suspend fun sayHello(firstName: String, lastName: String, age: Int): String {
-        return "Hello, $firstName $lastName (age $age)"
+        return "Hello, $firstName $lastName (age $age) (Api Stream)"
     }
 
     init {

@@ -1,6 +1,7 @@
 package playground
 
 import androidx.compose.runtime.*
+import com.varabyte.kobweb.browser.api
 import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
@@ -20,10 +21,13 @@ import com.varabyte.kobweb.silk.theme.colors.saveToLocalStorage
 import com.varabyte.kobweb.silk.theme.colors.systemPreference
 import com.varabyte.kobweb.streams.ApiStream
 import com.varabyte.kobweb.streams.ApiStreamListener
+import kotlinx.browser.window
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.rpc.krpc.KrpcConfig
 import kotlinx.rpc.krpc.KrpcTransport
@@ -92,59 +96,29 @@ fun AppEntry(content: @Composable () -> Unit) {
     }
 }
 
-//@OptIn(InternalCoroutinesApi::class, DelicateCoroutinesApi::class)
-//class WebSocketTransport(private val webSocket: WebSocket) : RPCTransport {
-//    // Transport job should always be cancelled and never closed
-//    private val transportJob = Job()
-//
-//    override val coroutineContext: CoroutineContext = transportJob
-//
-//    init {
-//        // Close the socket when the transport job is cancelled manually
-//        transportJob.invokeOnCompletion(onCancelling = true) { // this onCancelling is internal api idk why
-//            webSocket.close()
-//        }
-//    }
-//
-//    override suspend fun send(message: RPCTransportMessage) {
-//        when (message) {
-//            is RPCTransportMessage.StringMessage -> {
-//                webSocket.send(message.value)
-//            }
-//
-//            is RPCTransportMessage.BinaryMessage -> {
-//                webSocket.send(message.value.unsafeCast<Int8Array>())
-//            }
-//        }
-//    }
-//
-//    override suspend fun receive(): RPCTransportMessage {
-//        return suspendCoroutine { continuation ->
-//            webSocket.onmessage = { messageEvent ->
-//                val message = when (messageEvent.type) {
-//                    "text" -> {
-//                        RPCTransportMessage.StringMessage(messageEvent.data.unsafeCast<String>())
-//                    }
-//
-//                    "blob" -> {
-//                        // TODO: this cast is probably unsafe
-//                        RPCTransportMessage.BinaryMessage(messageEvent.data.unsafeCast<ByteArray>())
-//                    }
-//
-//                    else -> {
-//                        error("Unsupported websocket message type: ${messageEvent.type}. Expected \"text\" or \"binary\"")
-//                    }
-//                }
-//                continuation.resume(message)
-//            }
-//        }
-//    }
-//}
-//
-//internal class WsRPCClient(
-//    webSocket: WebSocket,
-//    config: RPCConfig.Client,
-//) : KRPCClient(config, WebSocketTransport(webSocket))
+class PostRequestTransport(private val apiPath: String) : KrpcTransport {
+    var result: CompletableDeferred<ByteArray> = CompletableDeferred()
+
+    val transportJob = Job()
+
+    override val coroutineContext: CoroutineContext = transportJob
+
+    override suspend fun receive(): KrpcTransportMessage {
+        val x = result.await().decodeToString()
+        result = CompletableDeferred()
+        return KrpcTransportMessage.StringMessage(x)
+    }
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    override suspend fun send(message: KrpcTransportMessage) {
+        val body = when (message) {
+            is KrpcTransportMessage.BinaryMessage -> message.value.asUByteArray().toByteArray()
+            is KrpcTransportMessage.StringMessage -> message.value.encodeToByteArray()
+        }
+        val res = async { window.api.tryPost(apiPath, body = body) }
+        result.complete(res.await()!!)
+    }
+}
 
 @OptIn(InternalCoroutinesApi::class, DelicateCoroutinesApi::class)
 class ApiStreamTransport(private val webSocket: ApiStream) : KrpcTransport {
@@ -197,3 +171,8 @@ internal class ApiStreamRPCClient(
     webSocket: ApiStream,
     config: KrpcConfig.Client,
 ) : KrpcClient(config, ApiStreamTransport(webSocket))
+
+internal class PostRPCClient(
+    apiPath: String,
+    config: KrpcConfig.Client,
+) : KrpcClient(config, PostRequestTransport(apiPath))
