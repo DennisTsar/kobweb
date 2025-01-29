@@ -1,6 +1,9 @@
 package playground
 
 import androidx.compose.runtime.*
+import com.varabyte.kobweb.browser.storage.createStorageKey
+import com.varabyte.kobweb.browser.storage.getItem
+import com.varabyte.kobweb.browser.storage.setItem
 import com.varabyte.kobweb.compose.css.*
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
@@ -15,10 +18,25 @@ import com.varabyte.kobweb.silk.init.registerStyleBase
 import com.varabyte.kobweb.silk.style.common.SmoothColorStyle
 import com.varabyte.kobweb.silk.style.toModifier
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
+import com.varabyte.kobweb.streams.ApiStream
+import com.varabyte.kobweb.streams.ApiStreamListener
+import kotlinx.browser.localStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.rpc.krpc.RPCConfig
+import kotlinx.rpc.krpc.RPCTransport
+import kotlinx.rpc.krpc.RPCTransportMessage
+import kotlinx.rpc.krpc.client.KRPCClient
 import com.varabyte.kobweb.silk.theme.colors.loadFromLocalStorage
 import com.varabyte.kobweb.silk.theme.colors.saveToLocalStorage
 import com.varabyte.kobweb.silk.theme.colors.systemPreference
 import org.jetbrains.compose.web.css.*
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 private const val COLOR_MODE_STORAGE_KEY_NAME = "playground:app:colorMode"
 
@@ -77,3 +95,109 @@ fun AppEntry(content: @Composable () -> Unit) {
         }
     }
 }
+
+//@OptIn(InternalCoroutinesApi::class, DelicateCoroutinesApi::class)
+//class WebSocketTransport(private val webSocket: WebSocket) : RPCTransport {
+//    // Transport job should always be cancelled and never closed
+//    private val transportJob = Job()
+//
+//    override val coroutineContext: CoroutineContext = transportJob
+//
+//    init {
+//        // Close the socket when the transport job is cancelled manually
+//        transportJob.invokeOnCompletion(onCancelling = true) { // this onCancelling is internal api idk why
+//            webSocket.close()
+//        }
+//    }
+//
+//    override suspend fun send(message: RPCTransportMessage) {
+//        when (message) {
+//            is RPCTransportMessage.StringMessage -> {
+//                webSocket.send(message.value)
+//            }
+//
+//            is RPCTransportMessage.BinaryMessage -> {
+//                webSocket.send(message.value.unsafeCast<Int8Array>())
+//            }
+//        }
+//    }
+//
+//    override suspend fun receive(): RPCTransportMessage {
+//        return suspendCoroutine { continuation ->
+//            webSocket.onmessage = { messageEvent ->
+//                val message = when (messageEvent.type) {
+//                    "text" -> {
+//                        RPCTransportMessage.StringMessage(messageEvent.data.unsafeCast<String>())
+//                    }
+//
+//                    "blob" -> {
+//                        // TODO: this cast is probably unsafe
+//                        RPCTransportMessage.BinaryMessage(messageEvent.data.unsafeCast<ByteArray>())
+//                    }
+//
+//                    else -> {
+//                        error("Unsupported websocket message type: ${messageEvent.type}. Expected \"text\" or \"binary\"")
+//                    }
+//                }
+//                continuation.resume(message)
+//            }
+//        }
+//    }
+//}
+//
+//internal class WsRPCClient(
+//    webSocket: WebSocket,
+//    config: RPCConfig.Client,
+//) : KRPCClient(config, WebSocketTransport(webSocket))
+
+@OptIn(InternalCoroutinesApi::class, DelicateCoroutinesApi::class)
+class ApiStreamTransport(private val webSocket: ApiStream) : RPCTransport {
+    // Transport job should always be cancelled and never closed
+    private val transportJob = Job()
+
+    override val coroutineContext: CoroutineContext = transportJob
+
+    class MyStreamListener() : ApiStreamListener {
+        var onTextReceived: (String) -> Unit = {}
+        override fun onTextReceived(ctx: ApiStreamListener.TextReceivedContext) {
+            onTextReceived(ctx.text)
+        }
+    }
+
+    var myStreamListener = MyStreamListener()
+
+    init {
+        // Close the socket when the transport job is cancelled manually
+        transportJob.invokeOnCompletion(onCancelling = true) { // this onCancelling is internal api idk why
+            webSocket.disconnect()
+        }
+        CoroutineScope(coroutineContext).launch {
+            webSocket.connect(myStreamListener)
+        }
+    }
+
+    override suspend fun send(message: RPCTransportMessage) {
+        when (message) {
+            is RPCTransportMessage.StringMessage -> {
+                webSocket.send(message.value)
+            }
+
+            is RPCTransportMessage.BinaryMessage -> {
+                webSocket.send(message.value.toString()) // TODO: this is wrong
+            }
+        }
+    }
+
+    override suspend fun receive(): RPCTransportMessage {
+        return suspendCoroutine { continuation ->
+            myStreamListener.onTextReceived = { messageEvent ->
+                continuation.resume(RPCTransportMessage.StringMessage(messageEvent))
+            }
+        }
+    }
+}
+
+internal class ApiStreamRPCClient(
+    webSocket: ApiStream,
+    config: RPCConfig.Client,
+) : KRPCClient(config, ApiStreamTransport(webSocket))

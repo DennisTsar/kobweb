@@ -13,6 +13,11 @@ kobweb {
     kspProcessorDependency.set("com.varabyte.kobweb:site-processors")
 }
 
+composeCompiler {
+    includeSourceInformation = false
+    includeTraceMarkers = false
+}
+
 kotlin {
     configAsKobwebLibrary(includeServer = true)
 

@@ -3,6 +3,10 @@ plugins {
     id("kobweb-compose")
     id("com.varabyte.kobweb.internal.publish")
 }
+composeCompiler {
+    includeSourceInformation = false
+    includeTraceMarkers = true
+}
 
 group = "com.varabyte.kobwebx"
 version = libs.versions.kobweb.get()
