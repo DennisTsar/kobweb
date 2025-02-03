@@ -8,7 +8,7 @@ import com.varabyte.kobweb.api.http.setBodyText
 import com.varabyte.kobweb.api.init.InitApi
 import com.varabyte.kobweb.api.init.InitApiContext
 import com.varabyte.kobweb.rpc.RpcContext
-import com.varabyte.kobweb.rpc.ServiceDataHolder
+import com.varabyte.kobweb.rpc.RpcDataHolder
 import com.varabyte.kobweb.rpc.registerService
 import kotlinx.rpc.krpc.rpcServerConfig
 import kotlinx.rpc.krpc.serialization.json.json
@@ -17,7 +17,7 @@ import kotlin.coroutines.CoroutineContext
 
 //@KobwebRpc("krpc-test")
 class MyPostImpl(
-    val ctx: RpcContext<MyPostService>,
+    val ctx: RpcContext,
     override val coroutineContext: CoroutineContext
 ) : MyPostService {
     override suspend fun sayHello(firstName: String, lastName: String, age: Int): String {
@@ -28,22 +28,29 @@ class MyPostImpl(
 // The below should be automatically generated
 
 @InitApi
-fun initPostRpcServer(ctx: InitApiContext) {
+fun init_MyPostService(ctx: InitApiContext) {
     registerService<MyPostService>(ctx, rpcServerConfig {
         serialization {
             json()
         }
     }) {
-        MyPostImpl(RpcContext(ctx.env, ctx.data, ctx.logger), it)
+        MyPostImpl(
+            RpcContext(
+                ctx.env,
+                ctx.data,
+                ctx.logger,
+                ctx.data.getValue<RpcDataHolder>().getValue<MyPostService>()
+            ), it
+        )
     }
 }
 
 @Api("krpc-test")
-suspend fun mockRequest(ctx: ApiContext) {
+suspend fun api_MyPostService(ctx: ApiContext) {
     if (ctx.req.method != HttpMethod.POST) {
         return
     }
-    val data = ctx.data.getValue<ServiceDataHolder<MyPostService>>()
+    val data = ctx.data.getValue<RpcDataHolder>().getValue<MyPostService>()
     data.req = ctx.req
     // TODO: I don't think every request needs a body?
     data.transportHandler.provideRequest(ctx.req.body!!.decodeToString())

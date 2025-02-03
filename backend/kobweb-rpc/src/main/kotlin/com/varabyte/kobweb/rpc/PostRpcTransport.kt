@@ -39,7 +39,7 @@ class PostRpcTransport(private val data: TransportHandler) : KrpcTransport {
 // Currently this requires one server per service since setting up a `KrpcTransport` for multiple services seems complicated
 @PublishedApi
 internal class PostRpcServer(
-    data: ServiceDataHolder<*>,
+    data: ServiceDataHolder,
     config: KrpcConfig.Server,
 ) : KrpcServer(config, PostRpcTransport(data.transportHandler))
 
@@ -48,16 +48,32 @@ inline fun <reified Service : RemoteService> registerService(
     config: KrpcConfig.Server,
     noinline serviceFactory: (CoroutineContext) -> Service
 ) {
-    check(ctx.data.get<ServiceDataHolder<Service>>() == null) {
-        "Service already registered: ${Service::class.simpleName}"
+    if (ctx.data.get<RpcDataHolder>() == null) {
+        ctx.data.add(RpcDataHolder())
     }
-    val serviceDataHolder = ServiceDataHolder<Service>()
-    ctx.data.add(serviceDataHolder)
+    val rpcDataHolder = ctx.data.getValue<RpcDataHolder>()
+    val serviceDataHolder = rpcDataHolder.register<Service>()
     PostRpcServer(serviceDataHolder, config)
         .registerService(serviceFactory)
 }
 
-class ServiceDataHolder<@Suppress("unused") Service : RemoteService> {
+class RpcDataHolder {
+    @PublishedApi
+    internal val data = mutableMapOf<Class<*>, ServiceDataHolder>()
+
+    inline fun <reified T> register(): ServiceDataHolder {
+        check(T::class.java !in data) {
+            "Service already registered: ${T::class.simpleName}"
+        }
+        val serviceDataHolder = ServiceDataHolder()
+        data[T::class.java] = serviceDataHolder
+        return serviceDataHolder
+    }
+
+    inline fun <reified T> getValue() = data[T::class.java]!!
+}
+
+class ServiceDataHolder {
     val transportHandler = TransportHandler()
     var req: Request? = null
 }
@@ -84,12 +100,13 @@ class TransportHandler {
     }
 }
 
-class RpcContext<Service : RemoteService>(
+class RpcContext(
     val env: Environment,
     val data: Data,
     val logger: Logger,
+    private val serviceDataHolder: ServiceDataHolder,
 ) {
-    val req: Request? get() = data.getValue<ServiceDataHolder<Service>>().req
+    val req: Request? get() = serviceDataHolder.req
     // There probably should be some way of modifying some aspects of the response here
     // Though not the body, since that's what get returned by the function itself
 }
