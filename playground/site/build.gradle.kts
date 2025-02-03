@@ -7,6 +7,7 @@ plugins {
     id("com.varabyte.kobweb.application")
     id("com.varabyte.kobwebx.markdown")
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.kotlinx.rpc)
 }
 
 group = "playground"
@@ -32,10 +33,15 @@ kotlin {
     configAsKobwebApplication(includeServer = true)
 
     sourceSets {
+        commonMain.dependencies {
+            implementation(libs.kotlinx.rpc.serialization.json)
+            implementation(libs.kotlinx.rpc.core)
+        }
         jsMain.dependencies {
             implementation(libs.compose.runtime)
             implementation(libs.compose.html.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.rpc.client)
             implementation("com.varabyte.kobweb:kobweb-core")
             implementation("com.varabyte.kobweb:kobweb-silk")
             implementation("com.varabyte.kobwebx:silk-icons-fa")
@@ -45,7 +51,10 @@ kotlin {
             implementation(project(":worker"))
         }
         jvmMain.dependencies {
+            implementation("org.slf4j:slf4j-api:2.0.13") // TODO: This probably shouldn't be required?
             implementation("com.varabyte.kobweb:kobweb-api")
+            implementation("com.varabyte.kobweb:kobweb-rpc")
+            implementation(libs.kotlinx.rpc.server)
             implementation(project(":sitelib"))
         }
     }
