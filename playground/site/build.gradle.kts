@@ -36,6 +36,7 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.rpc.serialization.json)
             implementation(libs.kotlinx.rpc.core)
+            implementation("com.varabyte.kobweb:kobweb-rpc")
         }
         jsMain.dependencies {
             implementation(libs.compose.runtime)
@@ -53,7 +54,6 @@ kotlin {
         jvmMain.dependencies {
             implementation("org.slf4j:slf4j-api:2.0.13") // TODO: This probably shouldn't be required?
             implementation("com.varabyte.kobweb:kobweb-api")
-            implementation("com.varabyte.kobweb:kobweb-rpc")
             implementation(libs.kotlinx.rpc.server)
             implementation(project(":sitelib"))
         }
