@@ -8,8 +8,10 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
 import org.jetbrains.dokka.gradle.tasks.DokkaGenerateTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.utils.named
 import javax.inject.Inject
 
@@ -84,6 +86,11 @@ class KobwebPublishPlugin : Plugin<Project> {
             apply("org.gradle.maven-publish")
             apply("org.gradle.signing")
             apply("org.jetbrains.dokka")
+        }
+
+        // Hijack this plugin to enable context parameter
+        project.extensions.findByType<KotlinMultiplatformExtension>()?.run {
+            compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
         }
 
         val dokkaHtmlTask = project.tasks.named<DokkaGenerateTask>("dokkaGeneratePublicationHtml")

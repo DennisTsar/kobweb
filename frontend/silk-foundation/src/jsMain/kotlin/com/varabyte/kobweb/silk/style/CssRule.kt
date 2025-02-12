@@ -34,11 +34,9 @@ sealed class CssRule {
             OfPseudoClass("$pseudoClass(${params.mapNotNull { it.toSelectorText() }.joinToString()})")
     }
 
-    // Note: This is used by the `StyleScope` class to create css rules without leaking CssRule's implementation details.
-    // If/when kotlin supports context parameters, the logic can be entirely contained within this class, taking a
-    // `StyleScope` instance as a context parameter.
-    internal fun cssRule(target: StyleScope, createModifier: () -> Modifier) {
-        target.cssRule(mediaQuery, toSelectorText(), createModifier)
+    context(scope: StyleScope)
+    operator fun invoke(createModifier: () -> Modifier) {
+        scope.cssRule(mediaQuery, toSelectorText(), createModifier)
     }
 
     protected open val mediaQuery: CSSMediaQuery? = null

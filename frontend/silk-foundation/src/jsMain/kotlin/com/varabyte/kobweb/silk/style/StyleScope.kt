@@ -4,7 +4,6 @@ import com.varabyte.kobweb.compose.attributes.ComparableAttrsScope
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.toAttrs
 import com.varabyte.kobweb.silk.style.breakpoint.Breakpoint
-import com.varabyte.kobweb.silk.style.breakpoint.BreakpointQueryProvider
 import org.jetbrains.compose.web.attributes.AttrsScope
 import org.jetbrains.compose.web.css.*
 import org.w3c.dom.Element
@@ -44,36 +43,6 @@ abstract class StyleScope {
 
     fun cssRule(mediaQuery: CSSMediaQuery, createModifier: () -> Modifier) {
         _cssModifiers.add(CssModifier(createModifier(), mediaQuery))
-    }
-
-    // Note: These probably would have been an extension methods except Kotlin doesn't support multiple receivers yet
-    // (here, we'd need to access both "BreakpointQueryProvider/CssRule" and "StyleScope")
-
-    /**
-     * Declare a style that applies within the provided breakpoint(s).
-     *
-     * When applied to a single breakpoint, this style is active from the beginning of the breakpoint to all larger
-     * breakpoints.
-     *
-     * When applied to a breakpoint range, this style is active from the beginning of the lower breakpoint to the end of
-     * the range, which may be inclusive or exclusive depending on the range.
-     *
-     * Examples:
-     * - `MD { ... }` will apply to desktops, wide screens, and ultra wide screens.
-     * - `(SM .. MD) { ... }` will apply for tablets through desktops but not for mobile devices nor wide screens
-     * - `(SM ..< LG) { ... }` will apply for tablets through desktops but not for mobile devices nor wide screens
-     * - `(ZERO ..< SM) { ... }` will only apply to mobile devices. Note that `until(SM) { ... }` is recommended in
-     *   this case.
-     *
-     * @see until
-     * @see between
-     */
-    operator fun BreakpointQueryProvider.invoke(createModifier: () -> Modifier) {
-        cssRule(toCSSMediaQuery(), createModifier)
-    }
-
-    operator fun CssRule.invoke(createModifier: () -> Modifier) {
-        cssRule(this@StyleScope, createModifier)
     }
 }
 

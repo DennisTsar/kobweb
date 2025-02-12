@@ -416,23 +416,23 @@ internal class ImmutableCssStyle(
  */
 interface CssStyleScopeBase {
     val colorMode: ColorMode
-
-    // Keyframes.toAnimation has a composable and non-composable version; the non-composable one must begin with an
-    // explicit color-mode parameter. However, it's so easy to accidentally use the wrong one inside a CssStyle block,
-    // especially if refactoring code from a regular composable method into a CssStyle. This override captures this case
-    // and prevents us from getting an annoying runtime error.
-    // NOTE: We should migrate this to context parameters when they become available.
-    fun Keyframes.toAnimation(
-        duration: CSSTimeNumericValue? = null,
-        timingFunction: AnimationTimingFunction? = null,
-        delay: CSSTimeNumericValue? = null,
-        iterationCount: AnimationIterationCount? = null,
-        direction: AnimationDirection? = null,
-        fillMode: AnimationFillMode? = null,
-        playState: AnimationPlayState? = null
-    ): Animation.Repeatable =
-        this.toAnimation(colorMode, duration, timingFunction, delay, iterationCount, direction, fillMode, playState)
 }
+
+// Keyframes.toAnimation has a composable and non-composable version; the non-composable one must begin with an
+// explicit color-mode parameter. However, it's so easy to accidentally use the wrong one inside a CssStyle block,
+// especially if refactoring code from a regular composable method into a CssStyle. This override captures this case
+// and prevents us from getting an annoying runtime error.
+context(scope: CssStyleScopeBase)
+fun Keyframes.toAnimation(
+    duration: CSSTimeNumericValue? = null,
+    timingFunction: AnimationTimingFunction? = null,
+    delay: CSSTimeNumericValue? = null,
+    iterationCount: AnimationIterationCount? = null,
+    direction: AnimationDirection? = null,
+    fillMode: AnimationFillMode? = null,
+    playState: AnimationPlayState? = null
+): Animation.Repeatable =
+    this.toAnimation(scope.colorMode, duration, timingFunction, delay, iterationCount, direction, fillMode, playState)
 
 /**
  * An extension to [StyleScope] which adds extra information only relevant to [CssStyle] blocks.

@@ -15,6 +15,7 @@ kobweb {
 
 kotlin {
     configAsKobwebLibrary(includeServer = true)
+    compilerOptions.freeCompilerArgs.add("-Xcontext-parameters")
 
     sourceSets {
         jsMain.dependencies {

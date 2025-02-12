@@ -1,16 +1,43 @@
 package com.varabyte.kobweb.silk.style.breakpoint
 
+import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.silk.style.StyleScope
+import com.varabyte.kobweb.silk.style.between
 import com.varabyte.kobweb.silk.style.breakpoint.Breakpoint.LG
 import com.varabyte.kobweb.silk.style.breakpoint.Breakpoint.MD
 import com.varabyte.kobweb.silk.style.breakpoint.Breakpoint.SM
 import com.varabyte.kobweb.silk.style.breakpoint.Breakpoint.XL
+import com.varabyte.kobweb.silk.style.until
 import com.varabyte.kobweb.silk.theme.breakpoint.toWidth
 import org.jetbrains.compose.web.css.*
 
 /** An interface for expressing CSS media queries through [Breakpoint]s. */
 sealed interface BreakpointQueryProvider {
     fun toCSSMediaQuery(): CSSMediaQuery
+
+    /**
+     * Declare a style that applies within the provided breakpoint(s).
+     *
+     * When applied to a single breakpoint, this style is active from the beginning of the breakpoint to all larger
+     * breakpoints.
+     *
+     * When applied to a breakpoint range, this style is active from the beginning of the lower breakpoint to the end of
+     * the range, which may be inclusive or exclusive depending on the range.
+     *
+     * Examples:
+     * - `MD { ... }` will apply to desktops, wide screens, and ultra wide screens.
+     * - `(SM .. MD) { ... }` will apply for tablets through desktops but not for mobile devices nor wide screens
+     * - `(SM ..< LG) { ... }` will apply for tablets through desktops but not for mobile devices nor wide screens
+     * - `(ZERO ..< SM) { ... }` will only apply to mobile devices. Note that `until(SM) { ... }` is recommended in
+     *   this case.
+     *
+     * @see until
+     * @see between
+     */
+    context(scope: StyleScope)
+    operator fun invoke(createModifier: () -> Modifier) {
+        scope.cssRule(toCSSMediaQuery(), createModifier)
+    }
 }
 
 /**
