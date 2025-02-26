@@ -7,6 +7,7 @@ import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.compression.*
+import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.forwardedheaders.*
@@ -70,13 +71,21 @@ fun Application.configureHTTP(env: ServerEnvironment, conf: KobwebConf) {
         }
     }
 
-    if (env == ServerEnvironment.PROD) {
-        install(CachingHeaders) {
-            options { _, outgoingContent ->
-                when (outgoingContent.contentType?.withoutParameters()) {
-                    ContentType.Text.CSS -> CachingOptions(CacheControl.MaxAge(maxAgeSeconds = 24 * 60 * 60))
-                    else -> null
-                }
+    // Sends a Last-Modified header to enable conditional requests
+    install(ConditionalHeaders)
+
+    install(CachingHeaders) {
+        options { _, outgoingContent ->
+            CachingOptions(CacheControl.NoCache(null))
+            when (outgoingContent.contentType?.withoutParameters()) {
+                ContentType.Text.CSS -> CachingOptions(
+                    if (env == ServerEnvironment.PROD)
+                        CacheControl.MaxAge(maxAgeSeconds = 24 * 60 * 60)
+                    else
+                        CacheControl.NoCache(null)
+                )
+
+                else -> null
             }
         }
     }
