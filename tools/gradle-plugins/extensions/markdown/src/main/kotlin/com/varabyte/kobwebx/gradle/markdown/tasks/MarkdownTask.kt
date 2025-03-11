@@ -15,7 +15,6 @@ import java.io.File
 import java.nio.file.Path
 import javax.inject.Inject
 import kotlin.io.path.Path
-import kotlin.io.path.invariantSeparatorsPathString
 
 abstract class MarkdownTask @Inject constructor(
     @get:Internal protected val markdownBlock: MarkdownBlock,
@@ -52,7 +51,7 @@ abstract class MarkdownTask @Inject constructor(
     }
 
     protected fun packagePartsFor(mdFile: RelativePath): List<String> {
-        val mdPathRel = mdFile.toPath().invariantSeparatorsPathString
+        val mdPathRel = mdFile.pathString
 
         val parts = mdPathRel.split('/')
         val dirParts = parts.subList(0, parts.lastIndex)

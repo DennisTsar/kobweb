@@ -16,7 +16,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.getByType
 import java.io.File
 import javax.inject.Inject
-import kotlin.io.path.invariantSeparatorsPathString
 
 private class MarkdownVisitor : AbstractVisitor() {
     private val _frontMatter = mutableMapOf<String, List<String>>()
@@ -72,10 +71,10 @@ abstract class ProcessMarkdownTask @Inject constructor(markdownBlock: MarkdownBl
                     .accept(visitor)
                 add(
                     MarkdownEntry(
-                        filePath = relativePath.toPath().invariantSeparatorsPathString,
+                        filePath = relativePath.pathString,
                         frontMatter = visitor.frontMatter,
                         route = RouteUtils.getRoute(
-                            relativePath.toPath().toFile(),
+                            relativePath.toPath().toFile(), // TODO: this probably needs to be adjusted
                             visitor.frontMatter,
                         ),
                         "${absolutePackageFor(relativePath)}.${funNameFor(mdFile)}"
@@ -86,7 +85,7 @@ abstract class ProcessMarkdownTask @Inject constructor(markdownBlock: MarkdownBl
         val processScope = MarkdownBlock.ProcessScope()
         processScope.process(markdownEntries)
 
-        val genResRoot = getGenResDir().get().asFile.resolve(markdownPath.get())
+        val genResRoot = getGenResDir().get().asFile//.resolve(markdownPath.get())
         processScope.markdownOutput.forEach { processNode ->
             File(genResRoot, processNode.filePath).let { outputFile ->
                 outputFile.parentFile.mkdirs()

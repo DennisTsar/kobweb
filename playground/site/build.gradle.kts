@@ -23,7 +23,10 @@ kobweb {
     markdown {
         imports.add(".components.widgets.*")
         process.set { markdownEntries ->
-            generateMarkdown("markdown/listing.md", buildString {
+            // Note: this was changed just for demonstration purposes. "markdown/listing.md" still works
+            // But now, due to the temporary setup of "process" producing BOTH a markdown page and a resource
+            // this is treated both as a route at "/public/listing" and as a public resource at "listing.md"
+            generateMarkdown("public/listing.md", buildString {
                 appendLine("# Listing Index")
                 markdownEntries.forEach { entry ->
                     appendLine("* [${entry.filePath}](${entry.route})")

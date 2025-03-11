@@ -5,7 +5,6 @@ import com.varabyte.kobweb.gradle.core.kmp.JsTarget
 import com.varabyte.kobweb.gradle.core.kmp.buildTargets
 import com.varabyte.kobweb.gradle.core.kmp.kotlin
 import com.varabyte.kobweb.gradle.core.util.getJsDependencyResults
-import com.varabyte.kobweb.gradle.core.util.getResourceSources
 import com.varabyte.kobweb.gradle.core.util.hasDependencyNamed
 import com.varabyte.kobwebx.gradle.markdown.handlers.MarkdownHandlers
 import com.varabyte.kobwebx.gradle.markdown.tasks.ConvertMarkdownTask
@@ -45,9 +44,7 @@ class KobwebxMarkdownPlugin : Plugin<Project> {
                 pagesPackage.set(kobwebBlock.pagesPackage)
                 projectGroup.set(project.group)
                 markdownResources.from(markdownBlock.markdownPath.map { markdownPath ->
-                    project.getResourceSources(jsTarget).map { srcDirSet ->
-                        srcDirSet.matching { include("$markdownPath/**/*.md") }
-                    }
+                    projectLayout.projectDirectory.dir("src/${jsTarget.mainSourceSet}/resources/$markdownPath")
                 })
             }
 
@@ -57,17 +54,21 @@ class KobwebxMarkdownPlugin : Plugin<Project> {
                     project.getJsDependencyResults().hasDependencyNamed("com.varabyte.kobwebx:kobwebx-markdown")
                 )
                 markdownRoots.set(
-                    markdownBlock.markdownPath.flatMap { markdownPath ->
-                        project.getResourceSources(jsTarget).map { srcDirSet ->
-                            srcDirSet.srcDirs.map { root -> root.resolve(markdownPath) }
-                        }
+                    markdownBlock.markdownPath.map { markdownPath ->
+                        projectLayout.projectDirectory.dir("src/${jsTarget.mainSourceSet}/resources/$markdownPath")
                     }
                 )
             }
 
             project.kotlin.sourceSets.named(jsTarget.mainSourceSet) {
+                // This isn't even strictly necessary
+                resources.exclude("markdown/**/*.md")
                 kotlin.srcDir(convertTask)
                 kotlin.srcDir(processTask.map { it.getGenSrcDir() })
+                // This is a TEMPORARY setup to demonstrate that the process task can output resources
+                // Currently markdown.process outputs are treated as BOTH markdown pages AND resources
+                // When actually implemented, this should use an output property separate from the markdown page outputs
+                resources.srcDir(processTask.map { it.getGenResDir().get() })
             }
         }
     }

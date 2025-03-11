@@ -11,7 +11,6 @@ import org.commonmark.parser.Parser
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -24,7 +23,6 @@ import org.gradle.kotlin.dsl.getByType
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
-import kotlin.io.path.invariantSeparatorsPathString
 
 abstract class ConvertMarkdownTask @Inject constructor(markdownBlock: MarkdownBlock) :
     MarkdownTask(
@@ -53,7 +51,7 @@ abstract class ConvertMarkdownTask @Inject constructor(markdownBlock: MarkdownBl
     abstract val generatedMarkdownDir: DirectoryProperty
 
     @get:InputFiles
-    abstract val markdownRoots: ListProperty<File>
+    abstract val markdownRoots: DirectoryProperty
 
     @OutputDirectory
     fun getGenDir(): Provider<Directory> {
@@ -70,22 +68,22 @@ abstract class ConvertMarkdownTask @Inject constructor(markdownBlock: MarkdownBl
         getGenDir().get().asFile.clearDirectory()
         val cache = NodeCache(
             parser = markdownFeatures.createParser(),
-            roots = markdownRoots.get() + generatedMarkdownDir.asFileTree
+            roots = listOf(markdownRoots.asFile.get()) + generatedMarkdownDir.asFile.get()
         )
         val markdownFiles = markdownResources.asFileTree + objectFactory.fileTree().setDir(generatedMarkdownDir)
 
         markdownFiles.visit {
             if (isDirectory) return@visit
 
+
             val mdFile = file
             val packageParts = packagePartsFor(relativePath)
             val ktFileName = mdFile.nameWithoutExtension.replaceFirstChar { it.uppercase() }
-            val mdPathRel = relativePath.toPath()
-            val mdPathRelStr = mdPathRel.invariantSeparatorsPathString
+            val mdPathRelStr = relativePath.pathString
 
             File(
                 getGenDir().get().asFile,
-                mdPathRel.resolveSibling("$ktFileName.kt").invariantSeparatorsPathString
+                relativePath.parent.append(true, "$ktFileName.kt").pathString,
             ).let { outputFile ->
                 outputFile.parentFile.mkdirs()
                 val mdPackage = absolutePackageFor(packageParts)
