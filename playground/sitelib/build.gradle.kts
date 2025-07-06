@@ -22,7 +22,7 @@ kotlin {
             implementation(libs.compose.html.core)
             implementation("com.varabyte.kobweb:kobweb-core")
             implementation("com.varabyte.kobweb:kobweb-silk")
-            implementation("com.varabyte.kobwebx:silk-icons-fa")
+            implementation("com.varabyte.kobwebx:silk-icons-fa-svg")
         }
         jvmMain.dependencies {
             implementation("com.varabyte.kobweb:kobweb-api")

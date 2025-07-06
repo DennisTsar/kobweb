@@ -67,6 +67,7 @@ kobweb.markdown.addSource(project.layout.projectDirectory.dir("src/jsMain/resour
 
 kotlin {
     configAsKobwebApplication(includeServer = true)
+    js().compilerOptions.target = "es2015"
 
     sourceSets {
         jsMain.dependencies {
@@ -75,7 +76,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation("com.varabyte.kobweb:kobweb-core")
             implementation("com.varabyte.kobweb:kobweb-silk")
-            implementation("com.varabyte.kobwebx:silk-icons-fa")
+            implementation("com.varabyte.kobwebx:silk-icons-fa-svg")
             implementation("com.varabyte.kobwebx:silk-icons-mdi")
             implementation("com.varabyte.kobwebx:kobwebx-markdown")
             implementation("com.varabyte.kobwebx:kobwebx-serialization-kotlinx")
