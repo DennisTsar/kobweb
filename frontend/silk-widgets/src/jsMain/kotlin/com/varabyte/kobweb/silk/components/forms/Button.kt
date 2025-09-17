@@ -136,7 +136,6 @@ fun Button(
             .thenIf(!enabled, DisabledStyle.toModifier())
             .then(size.toModifier())
             .thenIf(colorPalette != null) {
-                @Suppress("NAME_SHADOWING") val colorPalette = colorPalette!!
                 val isDark = ColorMode.current.isDark
                 val isBrightColor = (if (isDark) colorPalette._200 else colorPalette._500).isBright
                 Modifier

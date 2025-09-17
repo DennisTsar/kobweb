@@ -1,6 +1,9 @@
 package com.varabyte.kobweb.compose.ui
 
-import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.*
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.ExperimentalExtendedContracts
+import kotlin.contracts.contract
 
 // Inspired by the official Android API
 // See also: https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/Modifier.kt
@@ -67,12 +70,14 @@ fun Modifier.thenUnless(condition: Boolean, other: Modifier): Modifier {
  * This is occasionally useful if you have a Modifier that is expensive to create, e.g. it takes some complicated
  * parameters you need to allocate which is a waste if the condition is false.
  */
+@OptIn(ExperimentalContracts::class, ExperimentalExtendedContracts::class)
 inline fun Modifier.thenIf(condition: Boolean, lazyProduce: () -> Modifier): Modifier {
+    contract { condition holdsIn lazyProduce }
     return this.then(if (condition) lazyProduce() else Modifier)
 }
 
 inline fun <T> Modifier.thenIfNotNull(value: T?, consume: (T) -> Modifier): Modifier {
-    return this.thenIf(value != null) { consume(value!!) }
+    return this.thenIf(value != null) { consume(value) }
 }
 
 /**
@@ -81,7 +86,9 @@ inline fun <T> Modifier.thenIfNotNull(value: T?, consume: (T) -> Modifier): Modi
  * This is occasionally useful if you have a Modifier that is expensive to create, e.g. it takes some complicated
  * parameters you need to allocate which is a waste if the condition is true.
  */
+@OptIn(ExperimentalContracts::class, ExperimentalExtendedContracts::class)
 inline fun Modifier.thenUnless(condition: Boolean, lazyProduce: () -> Modifier): Modifier {
+    contract { !condition holdsIn lazyProduce }
     return this.thenIf(!condition, lazyProduce)
 }
 

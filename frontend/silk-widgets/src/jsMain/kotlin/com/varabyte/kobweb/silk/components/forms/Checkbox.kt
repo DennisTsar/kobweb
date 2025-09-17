@@ -246,7 +246,6 @@ fun TriCheckbox(
             .toModifier(variant).thenIf(!enabled, DisabledStyle.toModifier()).then(size.toModifier())
             .setVariable(CheckboxVars.Spacing, spacing)
             .thenIf(colorPalette != null) {
-                @Suppress("NAME_SHADOWING") val colorPalette = colorPalette!!
                 val isDark = colorMode.isDark
                 val isBrightColor = (if (isDark) colorPalette._200 else colorPalette._500).isBright
                 Modifier

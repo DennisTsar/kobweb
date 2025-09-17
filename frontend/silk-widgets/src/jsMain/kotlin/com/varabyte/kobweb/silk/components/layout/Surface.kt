@@ -65,7 +65,7 @@ fun Surface(
     val surfaceModifier = SurfaceStyle.toModifier(variant)
         .then(modifier)
         .thenIf(colorModeOverride != null) {
-            Modifier.classNames(colorModeOverride!!.cssClass)
+            Modifier.classNames(colorModeOverride.cssClass)
         }
 
     if (colorModeOverride == null || ColorModeStrategy.current.useScope) {
