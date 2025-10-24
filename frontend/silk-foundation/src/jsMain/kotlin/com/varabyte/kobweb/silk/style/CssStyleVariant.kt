@@ -2,6 +2,9 @@ package com.varabyte.kobweb.silk.style
 
 import androidx.compose.runtime.*
 import com.varabyte.kobweb.compose.ui.Modifier
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.ExperimentalExtendedContracts
+import kotlin.contracts.contract
 
 abstract class CssStyleVariant<K : ComponentKind> {
     infix fun then(next: CssStyleVariant<K>): CssStyleVariant<K> {
@@ -44,17 +47,21 @@ internal class ExtendingCssStyleVariant<K : ComponentKind>(
     internal val baseVariant: SimpleCssStyleVariant<K>
 ) : SimpleCssStyleVariant<K>(init, { extraModifier().then(baseVariant.toModifier()) }, baseVariant.baseStyle)
 
-fun <K : ComponentKind> CssStyleVariant<K>.thenIf(
+@OptIn(ExperimentalContracts::class, ExperimentalExtendedContracts::class)
+inline fun <K : ComponentKind> CssStyleVariant<K>.thenIf(
     condition: Boolean,
     produce: () -> CssStyleVariant<K>
 ): CssStyleVariant<K> {
+    contract { condition holdsIn produce }
     return if (condition) this.then(produce()) else this
 }
 
-fun <K : ComponentKind> CssStyleVariant<K>.thenUnless(
+@OptIn(ExperimentalContracts::class, ExperimentalExtendedContracts::class)
+inline fun <K : ComponentKind> CssStyleVariant<K>.thenUnless(
     condition: Boolean,
     produce: () -> CssStyleVariant<K>
 ): CssStyleVariant<K> {
+    contract { !condition holdsIn produce }
     return this.thenIf(!condition, produce)
 }
 

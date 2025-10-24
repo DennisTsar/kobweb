@@ -8,6 +8,7 @@ group = "com.varabyte.kobweb"
 version = libs.versions.kobweb.get()
 
 kotlin {
+    compilerOptions.freeCompilerArgs.add("-Xallow-holdsin-contract")
     js {
         browser()
     }
