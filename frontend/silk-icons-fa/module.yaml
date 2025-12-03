@@ -1,0 +1,20 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies:
+  - $libs.compose.html.core
+  - ../kobweb-compose: exported
+
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml
+
+plugins: 
+  silk-icons-gen:
+    enabled: true
+    mode: Fa
+    srcFile: fa-icon-list.txt

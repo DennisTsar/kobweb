@@ -1,0 +1,11 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies:
+  - ../../common/framework-annotations: exported # exported or else opt-in message won't be shown
+  - ../io: exported
+  - ../../common/client-server-internal
+
+apply:
+  - ../../common.module-template.yaml

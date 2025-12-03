@@ -1,0 +1,18 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies:
+  - $libs.compose.html.core
+  - ../compose-html-ext
+  - ../kobweb-compose: exported
+
+test-dependencies: 
+  - ../test/compose-test-utils
+
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml

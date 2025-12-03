@@ -1,0 +1,9 @@
+tasks:
+  generate:
+    action: !generateSources
+      mode: ${pluginSettings.mode}
+      srcFile: ${pluginSettings.srcFile}
+      generatedSourceDir: ${taskOutputDir}
+    markOutputsAs:
+      - path: ${action.generatedSourceDir}
+        kind: kotlin-sources

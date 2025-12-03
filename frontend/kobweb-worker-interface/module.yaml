@@ -1,0 +1,10 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies: 
+  - ../../common/framework-annotations: exported
+  - $libs.kotlin.dom.api.compat
+
+apply:
+  - ../../common.module-template.yaml

@@ -1,0 +1,16 @@
+product:
+  type: lib
+  platforms: [js]
+  
+dependencies: 
+  - ../../common/framework-annotations
+  - $libs.compose.html.core
+  - $libs.kotlinx.coroutines.core: exported
+  - ../browser-ext: exported
+  
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml

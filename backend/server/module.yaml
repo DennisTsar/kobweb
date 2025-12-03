@@ -1,0 +1,37 @@
+product: jvm/app
+
+settings:
+  jvm:
+    mainClass: com.varabyte.kobweb.server.ApplicationKt
+
+dependencies:
+  # We can create a "ktor bundle" by making a template, but we won't be able to re-use it with composeOnlyApi anyway
+  # https://youtrack.jetbrains.com/issue/AMPER-4759/Ability-to-use-bundles-from-gradle-version-catalogs
+  - $libs.ktor.serialization.json
+  - $libs.ktor.server.auth
+  - $libs.ktor.server.caching.headers
+  - $libs.ktor.server.content.negotiation
+  - $libs.ktor.server.compression
+  - $libs.ktor.server.core
+  - $libs.ktor.server.cors
+  - $libs.ktor.server.default.headers
+  - $libs.ktor.server.forwarded.header
+  - $libs.ktor.server.host.common
+  - $libs.ktor.server.netty
+  - $libs.ktor.server.sse
+  - $libs.ktor.server.websockets
+  #
+  - $libs.kaml
+  - $libs.logback: runtime-only
+  - $libs.janino: runtime-only
+  #
+  - ../kobweb-api
+  - ../server-plugin
+  - ../../common/kobweb-common
+  - ../../common/client-server-internal
+
+test-dependencies: 
+  - $libs.ktor.server.tests
+
+apply:
+  - ../../common.module-template.yaml

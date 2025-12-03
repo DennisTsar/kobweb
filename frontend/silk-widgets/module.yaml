@@ -1,0 +1,16 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies:
+  - $libs.compose.html.core
+  - ../kobweb-compose: exported
+  - ../silk-foundation: exported
+  - ../compose-html-ext
+
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml

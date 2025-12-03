@@ -1,0 +1,8 @@
+product:
+  type: jvm/amper-plugin
+
+apply:
+  - ../../common.module-template.yaml
+
+pluginInfo:
+  settingsClass: Settings

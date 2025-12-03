@@ -1,0 +1,11 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies:
+  - ../../common/kobweb-serialization: exported
+  - ../kobweb-worker-interface: exported
+  - $libs.kotlin.dom.api.compat
+
+apply:
+  - ../../common.module-template.yaml

@@ -1,0 +1,14 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies:
+  - $libs.compose.html.core
+  - ../compose-html-ext: exported
+
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml
