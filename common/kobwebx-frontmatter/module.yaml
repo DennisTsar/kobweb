@@ -1,0 +1,6 @@
+product:
+  type: lib
+  platforms: [jvm, js]
+
+apply:
+  - ../../common.module-template.yaml

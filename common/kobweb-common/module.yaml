@@ -1,0 +1,20 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies: 
+  - $libs.kotlinx.coroutines.core
+  - $libs.kaml: exported
+    
+settings: 
+  kotlin:
+    serialization:
+      enabled: true
+
+test-settings: 
+  kotlin:
+    serialization:
+      format: json
+
+apply:
+  - ../../common.module-template.yaml

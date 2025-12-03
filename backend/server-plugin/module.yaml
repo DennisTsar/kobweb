@@ -1,0 +1,49 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies:
+  # We can create a "ktor bundle" by making a template, but we won't be able to re-use it with composeOnlyApi anyway
+  # https://youtrack.jetbrains.com/issue/AMPER-4759/Ability-to-use-bundles-from-gradle-version-catalogs
+  - $libs.ktor.serialization.json:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.auth:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.caching.headers:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.content.negotiation:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.compression:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.core:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.cors:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.default.headers:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.forwarded.header:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.host.common:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.netty:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.sse:
+      exported: true
+      scope: compile-only
+  - $libs.ktor.server.websockets:
+      exported: true
+      scope: compile-only
+
+apply:
+  - ../../common.module-template.yaml

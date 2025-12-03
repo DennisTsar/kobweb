@@ -1,0 +1,15 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies:
+  - $libs.compose.html.core
+  - ../../common/kobwebx-frontmatter: exported
+  - ../kobweb-core
+
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml

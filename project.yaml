@@ -1,0 +1,39 @@
+modules:
+  - backend/io
+  - backend/kobweb-api
+  - backend/server
+  - backend/server-plugin
+  - common/client-server-internal
+  - common/framework-annotations
+  - common/kobweb-common
+  - common/kobweb-serialization
+  - common/kobwebx-frontmatter
+  - common/kobwebx-serialization-kotlinx
+  - frontend/browser-ext
+  - frontend/compose-html-ext
+  - frontend/kobweb-compose
+  - frontend/kobweb-core
+  - frontend/kobweb-silk
+  - frontend/kobweb-worker
+  - frontend/kobweb-worker-interface
+  - frontend/kobwebx-markdown
+  - frontend/silk-foundation
+  - frontend/silk-icons-fa
+  - frontend/silk-icons-mdi
+  - frontend/silk-widgets
+  - frontend/silk-widgets-kobweb
+  - frontend/test/compose-test-utils
+  # plugins
+  - frontend/silk-icons-gen
+#  - tools/gradle-plugins/application
+#  - tools/gradle-plugins/core
+#  - tools/gradle-plugins/library
+#  - tools/gradle-plugins/worker
+#  - tools/gradle-plugins/extensions/markdown
+#  - tools/ksp/ksp-ext
+#  - tools/ksp/site-processors
+#  - tools/ksp/worker-processor
+#  - tools/processor-common
+
+plugins:
+  - ./frontend/silk-icons-gen

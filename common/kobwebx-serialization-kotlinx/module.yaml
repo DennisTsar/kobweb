@@ -1,0 +1,17 @@
+product:
+  type: lib
+  platforms: [jvm, js]
+
+dependencies: 
+  - ../kobweb-serialization
+  - $libs.kotlinx.serialization.json
+
+dependencies@js: 
+  - ../../frontend/kobweb-core
+  - $libs.kotlinx.coroutines.core
+    
+dependencies@jvm: 
+  - ../../backend/kobweb-api
+
+apply:
+  - ../../common.module-template.yaml

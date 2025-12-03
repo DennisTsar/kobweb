@@ -1,0 +1,20 @@
+product:
+  type: lib
+  platforms: [js]
+
+dependencies: 
+  - $libs.compose.html.core
+  - ../compose-html-ext: exported
+  - ../../common/client-server-internal
+  - ../kobweb-worker-interface: exported
+
+settings:
+  compose:
+    enabled: true
+  kotlin:
+    serialization:
+      enabled: true
+      format: json
+
+apply:
+  - ../../common.module-template.yaml

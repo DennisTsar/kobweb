@@ -1,0 +1,11 @@
+product:
+  type: lib
+  platforms: [jvm, js]
+
+settings:
+  kotlin:
+    serialization:
+      enabled: true
+
+apply: 
+  - ../../common.module-template.yaml

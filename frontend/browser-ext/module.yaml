@@ -1,0 +1,9 @@
+product:
+  type: lib
+  platforms: [js]
+  
+dependencies: 
+  - $libs.kotlinx.coroutines.core: exported
+  
+apply:
+  - ../../common.module-template.yaml

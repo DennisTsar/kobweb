@@ -1,0 +1,17 @@
+product:
+  type: lib
+  platforms: [js]
+               
+dependencies:
+  - $libs.compose.html.core
+  - ../kobweb-core: exported
+  - ../silk-foundation: exported
+  - ../silk-widgets: exported
+  - ../silk-widgets-kobweb: exported
+
+settings:
+  compose:
+    enabled: true
+
+apply:
+  - ../../common.module-template.yaml
