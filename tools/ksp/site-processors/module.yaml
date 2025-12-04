@@ -1,0 +1,13 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies:
+  - $libs.ksp.processing
+  - $libs.ktor.serialization.json
+  - ../../processor-common
+  - ../ksp-ext
+  - ../../../common/kobweb-common
+
+apply: 
+  - ../../../common.module-template.yaml
