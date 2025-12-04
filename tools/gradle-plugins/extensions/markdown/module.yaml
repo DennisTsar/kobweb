@@ -1,0 +1,19 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies:
+  - $libs.kotlin.multiplatform.plugin: compile-only
+  - $libs.jsoup
+  - $libs.kaml
+  - $libs.commonmark.autolink
+  - $libs.commonmark.core
+  - $libs.commonmark.tables
+  - $libs.commonmark.tasklist
+  - ../../../../common/kobwebx-frontmatter
+  - ../../../../common/kobweb-common
+  - ../../core: compile-only
+
+apply:
+  - ../../../../common.module-template.yaml
+  - ../../../../common-gradle.module-template.yaml

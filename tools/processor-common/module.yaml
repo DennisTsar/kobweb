@@ -1,0 +1,12 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+settings:
+  kotlin:
+    serialization:
+      enabled: true
+      format: json
+
+apply: 
+  - ../../common.module-template.yaml

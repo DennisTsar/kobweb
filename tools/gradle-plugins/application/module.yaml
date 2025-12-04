@@ -1,0 +1,24 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies: 
+  - ../../../common/kobweb-common
+  - $libs.kotlin.multiplatform.plugin: compile-only
+  - $libs.jsoup
+  - $libs.kotlinpoet
+  - $libs.playwright
+  - ../core: exported
+
+repositories:
+  - https://plugins.gradle.org/m2/
+
+settings:
+  kotlin:
+    serialization: 
+      enabled: true
+      format: json
+      
+apply: 
+  - ../../../common.module-template.yaml
+  - ../../../common-gradle.module-template.yaml

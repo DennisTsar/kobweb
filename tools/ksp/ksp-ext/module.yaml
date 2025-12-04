@@ -1,0 +1,9 @@
+product:
+  type: lib
+  platforms: [jvm]
+
+dependencies: 
+  - $libs.ksp.processing
+
+apply: 
+  - ../../../common.module-template.yaml

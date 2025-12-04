@@ -23,17 +23,20 @@ modules:
   - frontend/silk-widgets
   - frontend/silk-widgets-kobweb
   - frontend/test/compose-test-utils
+  - tools/gradle-plugins/application
+  - tools/gradle-plugins/core
+  - tools/gradle-plugins/library
+  - tools/gradle-plugins/worker
+  - tools/gradle-plugins/extensions/markdown
+  - tools/ksp/ksp-ext
+  - tools/ksp/site-processors
+  - tools/ksp/worker-processor
+  - tools/processor-common
   # plugins
   - frontend/silk-icons-gen
-#  - tools/gradle-plugins/application
-#  - tools/gradle-plugins/core
-#  - tools/gradle-plugins/library
-#  - tools/gradle-plugins/worker
-#  - tools/gradle-plugins/extensions/markdown
-#  - tools/ksp/ksp-ext
-#  - tools/ksp/site-processors
-#  - tools/ksp/worker-processor
-#  - tools/processor-common
+  # playground
+#  - playground/sitelib
+#  - playground/site
 
 plugins:
   - ./frontend/silk-icons-gen
