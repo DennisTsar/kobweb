@@ -2,11 +2,13 @@ site:
   title: "Playground"
 
 server:
+  logging:
+    level: INFO
   files:
     dev:
       contentRoot: "build/processedResources/js/main/public"
       script: "build/kotlin-webpack/js/developmentExecutable/playground.js"
-      api: "build/libs/playground.jar"
+      api: "../../build/tasks/_site-bootstrap_createFatJar@backend-plugin/site-bootstrap-fat-jar.jar"
     prod:
       script: "build/kotlin-webpack/js/productionExecutable/playground.js"
       siteRoot: ".kobweb/site"

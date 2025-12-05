@@ -1,0 +1,39 @@
+product:
+  type: lib
+  platforms: [js, jvm]
+
+dependencies: 
+  - ../sitelib: exported # exported for site-bootstrap
+
+dependencies@js:
+  - $libs.compose.html.core
+  - ../../frontend/kobweb-core
+  - ../../frontend/kobweb-silk
+  - ../../frontend/silk-icons-fa
+  - ../../frontend/silk-icons-mdi
+  - ../../frontend/kobwebx-markdown
+  - ../../common/kobwebx-serialization-kotlinx
+
+dependencies@jvm:
+  - ../../backend/kobweb-api: 
+      scope: compile-only
+      exported: true # for site-bootstrap
+
+settings:
+  #  compose:
+  #    version: 1.9.3
+  #    enabled: true
+  kotlin:
+    #    serialization:
+    #      enabled: true
+    #      format: json
+    version: 2.3.0-RC
+    ksp:
+      version: 2.3.2
+      processors:
+        - ../../tools/ksp/site-processors
+      processorOptions:
+        kobweb.mode: APP
+        kobweb.projectGroup: playground
+        kobweb.apiPackage: .api
+        kobweb.pagesPackage: .pages

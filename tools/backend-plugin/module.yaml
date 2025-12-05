@@ -1,0 +1,16 @@
+product: jvm/amper-plugin
+
+dependencies:
+  - ../processor-common
+  - ../gradle-plugins/application
+  - ../../common/kobweb-common
+  - dev.gradleplugins:gradle-api:8.3 # TODO: temp
+
+settings:
+  kotlin:
+    serialization:
+      enabled: true
+      format: json
+
+pluginInfo:
+  settingsClass: Settings

@@ -7,5 +7,5 @@ import com.varabyte.kobweb.api.http.text
 
 @Api
 fun hello(ctx: ApiContext) {
-    ctx.res.body = Body.text("hello world")
+    ctx.res.body = Body.text("hello world2")
 }

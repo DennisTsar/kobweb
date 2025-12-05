@@ -1,0 +1,29 @@
+tasks:
+  cacheBackend:
+    action: !cacheBackend
+      siteClasspath: ${pluginSettings.siteClasspath}
+      siteResources: ${pluginSettings.siteModuleResources}
+      outputFile: ${taskOutputDir}/backend.json
+  genApis:
+    action: !genApis
+      appBackendData: ${cacheBackend.action.outputFile}
+      outputDir: ${taskOutputDir}
+    markOutputsAs:
+      - path: ${action.outputDir}
+        kind: kotlin-sources
+  startDev:
+    action: !startServer
+      serverJar: ${pluginSettings.serverJar}
+      projectRoot: ${pluginSettings.siteModuleResources}
+      fatJarPath: ${createFatJar.action.fatJar}
+      reuseServer: true
+      env: DEV
+      siteLayout: FULLSTACK
+  createFatJar:
+    action: !createFatJar
+      runtimeClasspath: ${module.runtimeClasspath}
+      originalJar: ${module.jar}
+      fatJar: ${taskOutputDir}/${module.name}-fat-jar.jar
+  stop:
+    action: !stopServer
+      projectRoot: ${pluginSettings.siteModuleResources}

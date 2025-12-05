@@ -32,8 +32,15 @@ modules:
   - tools/ksp/site-processors
   - tools/ksp/worker-processor
   - tools/processor-common
-  # plugins
+  # build plugins
   - frontend/silk-icons-gen
+  # playground
+  - playground/sitelib
+  - playground/site
+  - playground/site-bootstrap
+  # site plugins
+  - tools/backend-plugin
 
 plugins:
   - ./frontend/silk-icons-gen
+  - ./tools/backend-plugin

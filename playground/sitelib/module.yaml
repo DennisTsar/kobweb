@@ -1,0 +1,31 @@
+product:
+  type: lib
+  platforms: [js, jvm]
+
+dependencies@js:
+  - $libs.compose.html.core
+  - ../../frontend/kobweb-core
+  - ../../frontend/kobwebx-markdown
+  - ../../frontend/silk-icons-fa
+  - ../../frontend/kobweb-silk
+  - ../../frontend/silk-foundation
+
+dependencies@jvm:
+  - ../../backend/kobweb-api: compile-only
+
+# TODO: apply compose only to js
+settings:
+  compose:
+    version: 1.9.3
+    enabled: true
+  kotlin:
+    version: 2.3.0-RC
+    ksp:
+      version: 2.3.2
+      processors:
+        - ../../tools/ksp/site-processors
+      processorOptions:
+        kobweb.mode: LIBRARY
+        kobweb.projectGroup: playground
+        kobweb.apiPackage: .api
+        kobweb.pagesPackage: .pages

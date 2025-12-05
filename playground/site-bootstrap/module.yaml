@@ -1,0 +1,23 @@
+product:
+  type: lib
+  platforms: [ js, jvm ]
+  
+dependencies: 
+  - ../site
+
+# We get a circular dependency error if we try to apply `backend-plugin` on `site` directly, 
+# since we need to run after ksp, but we also generate sources 
+# (that ksp wants to process since there's no `excludedSources` like in gradle)
+plugins:
+  backend-plugin:
+    enabled: true
+    serverJar:
+      from: ../../backend/server
+    siteModuleResources:
+      from: ../site
+      kind: resources
+      includeGenerated: true
+    siteClasspath: 
+      dependencies: 
+        - ../site
+      scope: runtime

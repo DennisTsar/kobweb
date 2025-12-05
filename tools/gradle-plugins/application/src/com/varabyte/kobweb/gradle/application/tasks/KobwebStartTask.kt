@@ -5,6 +5,7 @@ import com.varabyte.kobweb.common.path.invariantSeparatorsPath
 import com.varabyte.kobweb.gradle.application.extensions.AppBlock
 import com.varabyte.kobweb.gradle.application.util.toDisplayText
 import com.varabyte.kobweb.gradle.core.tasks.KobwebTask
+import com.varabyte.kobweb.project.KobwebApplication
 import com.varabyte.kobweb.server.api.ServerEnvironment
 import com.varabyte.kobweb.server.api.ServerStateFile
 import com.varabyte.kobweb.server.api.SiteLayout
@@ -16,7 +17,9 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
+import java.nio.file.Path
 import javax.inject.Inject
+import kotlin.io.path.absolutePathString
 
 /**
  * Start a Kobweb web server.
@@ -55,103 +58,125 @@ abstract class KobwebStartTask @Inject constructor(
 
     @TaskAction
     fun execute() {
-        val stateFile = ServerStateFile(kobwebApplication.kobwebFolder)
-        stateFile.content?.let { serverState ->
-            if (serverState.isRunning()) {
-                val alreadyRunningMessage = "A Kobweb server is already running at ${serverState.toDisplayText()}"
-                if (!reuseServer) {
-                    throw GradleException("$alreadyRunningMessage and cannot be reused for this task.")
-                } else if (serverState.env != env) {
-                    throw GradleException(
-                        alreadyRunningMessage
-                            + " but can't be reused because it is using a different environment (want=$env, current=${serverState.env})"
-                    )
-                } else {
-                    println(alreadyRunningMessage)
+        execute(
+            kobwebApplication,
+            reuseServer,
+            env,
+            siteLayout.get(),
+            serverJar.get().asFile.toPath(),
+            remoteDebuggingBlock.enabled.get(),
+            remoteDebuggingBlock.port.get(),
+        )
+    }
+
+    companion object {
+        fun execute(
+            kobwebApplication: KobwebApplication,
+            reuseServer: Boolean,
+            env: ServerEnvironment,
+            siteLayout: SiteLayout,
+            serverJar: Path,
+            remoteDebuggingEnabled: Boolean,
+            remoteDebuggingPort: Int,
+        ) {
+            val stateFile = ServerStateFile(kobwebApplication.kobwebFolder)
+            stateFile.content?.let { serverState ->
+                if (serverState.isRunning()) {
+                    val alreadyRunningMessage = "A Kobweb server is already running at ${serverState.toDisplayText()}"
+                    if (!reuseServer) {
+                        throw GradleException("$alreadyRunningMessage and cannot be reused for this task.")
+                    } else if (serverState.env != env) {
+                        throw GradleException(
+                            alreadyRunningMessage
+                                + " but can't be reused because it is using a different environment (want=$env, current=${serverState.env})"
+                        )
+                    } else {
+                        println(alreadyRunningMessage)
+                    }
+                    return
                 }
-                return
             }
-        }
 
-        val javaHome = System.getenv("KOBWEB_JAVA_HOME") ?: System.getProperty("java.home")!!
-        val remoteDebuggingEnabled = (env == ServerEnvironment.DEV && remoteDebuggingBlock.enabled.get())
-        val processParams = buildList<String> {
-            add("${javaHome.invariantSeparatorsPath}/bin/java")
-            add(env.toSystemPropertyParam())
-            add(siteLayout.get().toSystemPropertyParam())
-            // See: https://ktor.io/docs/development-mode.html#system-property)
-            add("-Dio.ktor.development=${env == ServerEnvironment.DEV}")
-            if (env == ServerEnvironment.DEV && remoteDebuggingEnabled) {
-                add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${remoteDebuggingBlock.port.get()}")
-            }
-            add("-jar")
-            add(serverJar.get().asFile.absolutePath)
-        }.toTypedArray()
+            val javaHome = System.getenv("KOBWEB_JAVA_HOME") ?: System.getProperty("java.home")!!
+            val remoteDebuggingEnabled = (env == ServerEnvironment.DEV && remoteDebuggingEnabled)
+            val processParams = buildList<String> {
+                add("${javaHome.invariantSeparatorsPath}/bin/java")
+                add(env.toSystemPropertyParam())
+                add(siteLayout.toSystemPropertyParam())
+                // See: https://ktor.io/docs/development-mode.html#system-property)
+                add("-Dio.ktor.development=${env == ServerEnvironment.DEV}")
+                if (env == ServerEnvironment.DEV && remoteDebuggingEnabled) {
+                    add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:${remoteDebuggingPort}")
+                }
+                add("-jar")
+                add(serverJar.absolutePathString())
+            }.toTypedArray()
 
-        println(
-            """
+            println(
+                """
             Starting server by running:
                 ${processParams.joinToString(" ")}
             """.trimIndent()
-        )
-        // Flush above println. Otherwise, it can end up mixed-up in exception reporting below.
-        System.out.flush()
+            )
+            // Flush above println. Otherwise, it can end up mixed-up in exception reporting below.
+            System.out.flush()
 
-        val process = Runtime.getRuntime().exec(
-            processParams,
-            // Note: We intentionally set envp null here, to inherit our environment. One of the
-            // things that gets inherited is the tmp file location, which seems to be particularly
-            // important on Windows, as it will otherwise try to create temp files in folders that
-            // we don't have permissions to write to... (See #208)
-            null,
-            kobwebApplication.path.toFile()
-        )
+            val process = Runtime.getRuntime().exec(
+                processParams,
+                // Note: We intentionally set envp null here, to inherit our environment. One of the
+                // things that gets inherited is the tmp file location, which seems to be particularly
+                // important on Windows, as it will otherwise try to create temp files in folders that
+                // we don't have permissions to write to... (See #208)
+                null,
+                kobwebApplication.path.toFile()
+            )
 
-        process.inputStream.consumeAsync {
-            // We're not observing server output now, but maybe we will in the future.
-            // You'd think therefore we should delete this handler, but it actually seems
-            // to help avoid the server stalling on startup in Windows.
-            // So until we understand the root problem, we'll just leave this in for now.
+            process.inputStream.consumeAsync {
+                // We're not observing server output now, but maybe we will in the future.
+                // You'd think therefore we should delete this handler, but it actually seems
+                // to help avoid the server stalling on startup in Windows.
+                // So until we understand the root problem, we'll just leave this in for now.
 
-            // Potentially related discussions:
-            // - https://github.com/gradle/gradle/issues/16716
-            //   Running a child process from Gradle on Windows and trying to read the stdin
-            //   via inheritIO() will cause the waitFor() to hang endlessly. The reason is
-            //   most probably that the inheritIO() is not properly piped out from Gradle's
-            //   process, causing the stdout buffer to overflow and the child process to block.
-            //   The issue is only reproducible on Windows 10, most probably because Windows 10
-            //   stdout buffer is rather small.
-            // - https://docs.oracle.com/javase/7/docs/api/java/lang/Process.html
-            //   Because some native platforms only provide limited buffer size for standard
-            //   input and output streams, failure to promptly write the input stream or read
-            //   the output stream of the subprocess may cause the subprocess to block, or
-            //   even deadlock.
-        }
-
-        val errorMessage = StringBuilder()
-        process.errorStream.consumeAsync { line -> errorMessage.appendLine(line) }
-
-        // Note: We protect against old state files left around from previous runs by checking the PID explicitly.
-        // If the PIDs don't match, the file will get overwritten shortly.
-        while (process.isAlive && (stateFile.content.let { content ->
-                content == null || content.pid != process.pid()
-            })) {
-            Thread.sleep(300)
-        }
-        stateFile.content?.let { serverState ->
-            println("A Kobweb server is now running at ${serverState.toDisplayText()}")
-            if (remoteDebuggingEnabled) {
-                println("Remote debugging is enabled. You may attach a debugger to port ${remoteDebuggingBlock.port.get()}.")
+                // Potentially related discussions:
+                // - https://github.com/gradle/gradle/issues/16716
+                //   Running a child process from Gradle on Windows and trying to read the stdin
+                //   via inheritIO() will cause the waitFor() to hang endlessly. The reason is
+                //   most probably that the inheritIO() is not properly piped out from Gradle's
+                //   process, causing the stdout buffer to overflow and the child process to block.
+                //   The issue is only reproducible on Windows 10, most probably because Windows 10
+                //   stdout buffer is rather small.
+                // - https://docs.oracle.com/javase/7/docs/api/java/lang/Process.html
+                //   Because some native platforms only provide limited buffer size for standard
+                //   input and output streams, failure to promptly write the input stream or read
+                //   the output stream of the subprocess may cause the subprocess to block, or
+                //   even deadlock.
             }
-            println()
-            println("Run `gradlew kobwebStop` when you're ready to shut it down.")
-        } ?: run {
-            throw GradleException(buildString {
-                append("Unable to start the Kobweb server.")
-                if (errorMessage.isNotEmpty()) {
-                    append("\n\nError: $errorMessage")
+
+            val errorMessage = StringBuilder()
+            process.errorStream.consumeAsync { line -> errorMessage.appendLine(line) }
+
+            // Note: We protect against old state files left around from previous runs by checking the PID explicitly.
+            // If the PIDs don't match, the file will get overwritten shortly.
+            while (process.isAlive && (stateFile.content.let { content ->
+                    content == null || content.pid != process.pid()
+                })) {
+                Thread.sleep(300)
+            }
+            stateFile.content?.let { serverState ->
+                println("A Kobweb server is now running at ${serverState.toDisplayText()}")
+                if (remoteDebuggingEnabled) {
+                    println("Remote debugging is enabled. You may attach a debugger to port ${remoteDebuggingPort}.")
                 }
-            })
+                println()
+                println("Run `gradlew kobwebStop` when you're ready to shut it down.")
+            } ?: run {
+                throw GradleException(buildString {
+                    append("Unable to start the Kobweb server.")
+                    if (errorMessage.isNotEmpty()) {
+                        append("\n\nError: $errorMessage")
+                    }
+                })
+            }
         }
     }
 }
