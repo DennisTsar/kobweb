@@ -10,5 +10,5 @@ import java.util.*
 @Api
 fun generateId(ctx: ApiContext) {
     if (ctx.req.method != HttpMethod.GET) return
-    ctx.res.body = Body.text(UUID.randomUUID().toString())
+    ctx.res.body = Body.text("yolo234")//Body.text(UUID.randomUUID().toString())
 }

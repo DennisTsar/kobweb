@@ -16,6 +16,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import java.net.URL
+import java.net.URLClassLoader
 import java.net.URLConnection
 import java.net.URLStreamHandler
 import java.nio.file.Path
@@ -277,3 +278,15 @@ class ApiJarFile(
         apis
     }
 }
+
+//class IsolatingClassLoader(jarUrls: Array<URL>, private val serverClassLoader: ClassLoader) : URLClassLoader(jarUrls, serverClassLoader) {
+//    private val packagesFromServerClassLoader = listOf(
+//        "com.varabyte.kobweb.api.",
+//        "kotlin.",
+//    )
+//    override fun loadClass(name: String): Class<*>? {
+//        if (packagesFromServerClassLoader.any { name.startsWith(it) })
+//            return serverClassLoader.loadClass(name)
+//        return this.findClass(name)
+//    }
+//}

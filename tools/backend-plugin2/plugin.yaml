@@ -1,0 +1,45 @@
+tasks:
+  cacheBackend:
+    action: !cacheBackend
+      siteClasspath:
+        dependencies:
+          - ../../playground/site
+      siteResources:
+        from: ../../playground/site
+        kind: resources
+        includeGenerated: true
+      outputFile: ${taskOutputDir}/backend.json
+  genApis:
+    action: !genApis
+      appBackendData: ${cacheBackend.action.outputFile}
+      outputDir: ${taskOutputDir}
+    markOutputsAs:
+      - path: ${action.outputDir}
+        kind: kotlin-sources
+  startDev:
+    action: !start
+      env: DEV
+      reuseServer: true
+      siteLayout: FULLSTACK
+      serverJar:  ${pluginSettings.serverJar}
+      projectRoot: ${pluginSettings.siteModule}
+      compiledJarJustInCase: ${module.jar}
+      compiledJarJustInCase2: ${tasks.createFatJar.action.fatJar}
+      somethingElse:
+        from: ../../playground/site-bootstrap
+        includeGenerated: true
+        kind: resources
+  embedClasspathAsResources:
+    action: !buildUnpackedClasspath
+      outputDir: ${taskOutputDir}
+      baseClasspath: ${pluginSettings.embedClasspathAsResources.classpath}
+      subdirectoryName: ${pluginSettings.embedClasspathAsResources.resourceDirName}
+      jarListFileName: classpath.txt
+    markOutputsAs:
+      - path: ${taskOutputDir}
+        kind: jvm-resources
+  createFatJar:
+    action: !createFatJar
+      runtimeClasspath: ${module.runtimeClasspath}
+      originalJar: ${module.jar}
+      fatJar: ${taskOutputDir}/fat-backend.jar

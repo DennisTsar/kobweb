@@ -1,0 +1,26 @@
+tasks:
+  cacheBackend:
+    action: !cacheBackend
+#      appResources:
+#        kind: resources
+#        from: ../../playground/site
+#        includeGenerated: true
+      # would love to just auto-take the classpath of all dependencies, but this doesn't seem to wbe an option
+      #  since `${module.compiler/runtimeClasspath} both include the compiled output of the module itself and
+      #  thus can't be used to generate sources
+      otherResources:
+        - kind: resources
+          from: ../../playground/sitelib
+          includeGenerated: true
+      outputFile: ${taskOutputDir}/backend.json
+  genApis:
+    action: !genApis
+      appBackendData: ${cacheBackend.action.outputFile}
+      outputDir: ${taskOutputDir}
+    # TODO: can't actually do this due to circular dependency limitation (need "excludedSources" from KSP gradle plugin)
+    # but thb I'm thinking more about just generating everything in KSP:
+    #  see also: https://discord.com/channels/@me/1080320602218450985/1237073151762894900
+    # **NOTE**: currently working around this by commenting out `appResources` above
+    markOutputsAs:
+      - path: ${action.outputDir}
+        kind: kotlin-sources

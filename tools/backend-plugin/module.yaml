@@ -1,0 +1,14 @@
+product: jvm/amper-plugin
+
+dependencies:
+  - ../processor-common
+  - ../gradle-plugins/application # probably should refactor out the necessary part to a separate module
+
+settings:
+  kotlin:
+    serialization:
+      enabled: true
+      format: json
+
+apply:
+  - ../../common.module-template.yaml

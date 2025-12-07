@@ -1,6 +1,8 @@
-product:
-  type: lib
-  platforms: [jvm]
+product: jvm/app
+
+settings:
+  jvm:
+    mainClass: com.varabyte.kobweb.server.ApplicationKt
                
 dependencies:
   # We can create a "ktor bundle" by making a template, but we won't be able to re-use it with composeOnlyApi anyway

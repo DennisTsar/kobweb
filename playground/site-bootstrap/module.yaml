@@ -1,0 +1,20 @@
+product: jvm/app
+
+dependencies:
+  - ../site
+  - ../../backend/kobweb-api: compile-only
+
+#settings:
+#  jvm:
+#    runtimeClasspathMode: classes
+
+plugins:
+  backend-plugin2:
+    embedClasspathAsResources:
+      classpath: [ ../../backend/server ]
+      resourceDirName: "junit-listeners"
+    siteModule:
+      from: ../site
+    serverJar:
+      from: ../../backend/server
+    enabled: true

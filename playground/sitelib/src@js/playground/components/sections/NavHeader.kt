@@ -33,7 +33,7 @@ import org.jetbrains.compose.web.css.*
 
 val NavHeaderStyle = CssStyle.base(extraModifier = { SmoothColorStyle.toModifier() }) {
     Modifier
-        .fillMaxWidth()
+//        .fillMaxWidth()
         .height(50.px)
         // Intentionally invert the header colors from the rest of the page
         .backgroundColor(colorMode.toPalette().color)
