@@ -2,10 +2,7 @@ package com.varabyte.kobweb.compose.css
 
 import com.varabyte.truthish.assertThat
 import com.varabyte.truthish.assertWithMessage
-import org.jetbrains.compose.web.css.em
-import org.jetbrains.compose.web.css.percent
-import org.jetbrains.compose.web.css.px
-import org.jetbrains.compose.web.css.vh
+import org.jetbrains.compose.web.css.*
 import kotlin.test.Test
 
 class CSSPositionTest {
@@ -76,8 +73,9 @@ class CSSPositionTest {
 
         assertThat(CSSPosition(Edge.CenterX)).isEqualTo("center")
         assertThat(CSSPosition(Edge.CenterY)).isEqualTo("center")
-        assertThat(CSSPosition(Edge.Left, Edge.CenterY)).isEqualTo("left center")
-        assertThat(CSSPosition(Edge.CenterX, Edge.Bottom)).isEqualTo("center bottom")
+        assertThat(CSSPosition(Edge.Left, Edge.CenterY)).isEqualTo("left")
+        assertThat(CSSPosition(Edge.Left(0.px), Edge.CenterY).toString()).isEqualTo("left")
+        assertThat(CSSPosition(Edge.CenterX, Edge.Bottom)).isEqualTo("bottom")
         assertThat(CSSPosition(Edge.CenterX, Edge.CenterY)).isEqualTo("center")
     }
 
